@@ -12,10 +12,16 @@ export default function AISidebar({ garmentType, description, userContext, cloth
   const [targetOccasion, setTargetOccasion] = useState('');
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  // Auto-fetch data when tab changes if we don't have it yet
+  // Refetch when garment changes
   useEffect(() => {
-    if (!description) return;
-    if (data[activeTab]) return; // Already fetched
+    setData({ shop: null, style: null, trend: null });
+  }, [description, garmentType]);
+
+  // Auto-fetch data when tab changes or garment changes
+  useEffect(() => {
+    // If we have neither, then we stay idle
+    if (!description && !garmentType) return;
+    if (data[activeTab]) return; // Already fetched for this specific garment
 
     const fetchData = async () => {
       setLoading(true);
@@ -25,13 +31,15 @@ export default function AISidebar({ garmentType, description, userContext, cloth
         let endpoint = '';
         let payload = {};
 
+        const garmentId = description || garmentType;
+
         if (activeTab === 'shop') {
           endpoint = '/find-similar';
-          payload = { query: description || garmentType };
+          payload = { query: garmentId };
         } else if (activeTab === 'style') {
           endpoint = '/style-suggest';
           payload = {
-            currentCloth: description || garmentType,
+            currentCloth: garmentId,
             image: clothBase64,
             styleProfile: { 
               preferredColors: ['neutrals'], 
@@ -43,7 +51,7 @@ export default function AISidebar({ garmentType, description, userContext, cloth
         } else if (activeTab === 'trend') {
           endpoint = '/trend-analysis';
           payload = { 
-            garmentDescription: description || garmentType,
+            garmentDescription: garmentId,
             userContext,
             image: clothBase64
           };
@@ -71,20 +79,10 @@ export default function AISidebar({ garmentType, description, userContext, cloth
     };
 
     fetchData();
-  }, [activeTab, description, data]);
+  }, [activeTab, description, garmentType, data]);
 
-  // If no garment is loaded, show a placeholder
-  if (!description) {
-    return (
-      <div className="w-[380px] h-full flex flex-col bg-gray-900 border-l border-white/5 border-l-gray-800 text-white p-6 justify-center items-center text-center">
-        <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 border border-gray-700">
-          <span className="text-2xl">✨</span>
-        </div>
-        <h3 className="font-semibold text-lg text-gray-200">AI Assistant Offline</h3>
-        <p className="text-gray-400 text-sm mt-2">Upload a garment to activate AI fashion intelligence.</p>
-      </div>
-    );
-  }
+  // The AI is always "Online" but in standby if no garment is actively selected
+  const activeDescription = description || garmentType || 'Casual Outfit';
 
   return (
     <div className="w-[380px] h-full flex flex-col bg-[#0b0f19] border-l border-white/10 shadow-2xl relative z-20">

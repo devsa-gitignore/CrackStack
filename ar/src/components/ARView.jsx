@@ -17,7 +17,7 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
   const [showSkeleton, setShowSkeleton] = useState(false);
 
   // ── AR hooks (pure logic, zero UI) ──────────────────────────────────────
-  const { videoRef, cameraReady, cameraError, cameraStarted, startCamera } = useCamera();
+  const { videoRef, cameraReady, cameraError, cameraStarted, startCamera, stopCamera, startVideoFile, isVideoFile } = useCamera();
   const { landmarkerReady, loadingProgress, detect } = usePose();
   const { canvasRef } = useAREngine({
     videoRef,
@@ -96,12 +96,30 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
               <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
               </svg>
-              Start Camera
+              Start Live Camera
             </span>
           </button>
 
-          <p className="text-gray-600 text-xs mt-4">
-            Your browser will ask for camera permission
+          <div className="flex items-center my-6 w-full max-w-sm">
+            <div className="flex-1 h-px bg-gray-800"></div>
+            <span className="px-3 text-[10px] font-black uppercase text-gray-500 tracking-widest">OR USE VIDEO FILE</span>
+            <div className="flex-1 h-px bg-gray-800"></div>
+          </div>
+
+          <label className="cursor-pointer group relative px-8 py-3 bg-gray-900 border border-gray-800 hover:border-indigo-500/50 hover:bg-gray-800 text-gray-400 hover:text-gray-200 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
+            <span>📁 Upload MP4 / MOV Video</span>
+            <input 
+              type="file" 
+              accept="video/*" 
+              className="hidden" 
+              onChange={(e) => {
+                if (e.target.files?.[0]) startVideoFile(e.target.files[0]);
+              }} 
+            />
+          </label>
+
+          <p className="text-gray-600 text-[10px] mt-6 italic">
+            Videos should be recorded from a straight-on perspective for best results.
           </p>
         </div>
       </div>
@@ -112,7 +130,13 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
   return (
     <div className="relative w-full h-full bg-black">
       {/* Hidden video element — data source only */}
-      <video ref={videoRef} className="hidden" playsInline muted />
+      <video ref={videoRef} className="hidden" playsInline muted loop={isVideoFile} />
+      
+      <div className="absolute bottom-4 right-4 z-20 flex gap-2">
+         <button onClick={stopCamera} className="bg-red-600/20 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600/30 transition">
+           Exit AR
+         </button>
+      </div>
 
       {/* Main canvas — the only visible element */}
       <canvas ref={canvasRef} className="w-full h-full object-contain" />

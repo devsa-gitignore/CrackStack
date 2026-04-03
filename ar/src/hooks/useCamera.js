@@ -15,8 +15,17 @@ export default function useCamera() {
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const [cameraStarted, setCameraStarted] = useState(false);
+  const [videoFile, setVideoFile] = useState(null);
 
   const startCamera = useCallback(() => {
+    setVideoFile(null); // Reset file if starting camera
+    setCameraStarted(true);
+    setCameraError(null);
+  }, []);
+
+  const startVideoFile = useCallback((file) => {
+    setCameraStarted(false); // Stop camera if starting file
+    setVideoFile(file);
     setCameraStarted(true);
     setCameraError(null);
   }, []);
@@ -24,6 +33,7 @@ export default function useCamera() {
   const stopCamera = useCallback(() => {
     setCameraStarted(false);
     setCameraReady(false);
+    setVideoFile(null);
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.srcObject = null;
@@ -42,23 +52,35 @@ export default function useCamera() {
 
     async function init() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'user',
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
-          audio: false,
-        });
+        if (!videoFile) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'user',
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          });
 
-        if (cancelled || !videoRef.current) {
-          stream.getTracks().forEach((t) => t.stop());
+          if (cancelled || !videoRef.current) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
+          }
+
+          streamRef.current = stream;
+          const video = videoRef.current;
+          video.srcObject = stream;
+          video.loop = false;
+        } else if (videoFile) {
+          const video = videoRef.current;
+          video.srcObject = null;
+          video.src = URL.createObjectURL(videoFile);
+          video.loop = true; // Loop user-uploaded video for sizing
+        } else {
           return;
         }
-
-        streamRef.current = stream;
+      
         const video = videoRef.current;
-        video.srcObject = stream;
 
         // Wait for video metadata to load before playing
         await new Promise((resolve) => {
@@ -86,7 +108,7 @@ export default function useCamera() {
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Camera access failed:', err);
+          console.error('Video source failed:', err);
           setCameraError(err.message);
         }
       }
@@ -113,6 +135,8 @@ export default function useCamera() {
     cameraError,
     cameraStarted,
     startCamera,
+    startVideoFile,
     stopCamera,
+    isVideoFile: !!videoFile
   };
 }

@@ -31,7 +31,8 @@ export default function App() {
   const [userContext, setUserContext] = useState(null);
 
   const handleClothChange = (clothData) => {
-    setWardrobe(prev => [...prev, { ...clothData, id: Date.now(), isVisible: true }]);
+    // We prepend the new cloth so it becomes the FIRST visible item found by the Sidebar
+    setWardrobe(prev => [{ ...clothData, id: Date.now(), isVisible: true }, ...prev]);
     setIsUploaderOpen(false);
   };
 

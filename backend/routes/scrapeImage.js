@@ -22,35 +22,63 @@ router.post('/scrape-image', async (req, res) => {
 
     const html = response.data;
 
-    // We use a regular expression to intelligently hunt for the "og:image" meta tag.
-    // Almost every major modern shopping site uses this exact tag to show the main product picture on WhatsApp/iMessage previews.
-    const ogImageMatch = html.match(/<meta\s+(?:property|name)=["']og:image["']\s+content=["'](.*?)["']/i);
+    console.log(`[SCRAPER] Processing URL: ${productUrl} (HTML Length: ${html.length})`);
+
+    // Helper to extract content from meta tags more robustly
+    const getMetaTag = (tag) => {
+      // Matches both <meta property="..." content="..."> and <meta content="..." property="...">
+      const regex1 = new RegExp(`<meta[^>]+(?:property|name)=["']${tag}["'][^>]+content=["']([^"']+)["']`, 'i');
+      const regex2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${tag}["']`, 'i');
+      const match = html.match(regex1) || html.match(regex2);
+      return match ? match[1] : null;
+    };
+
+    const ogImage = getMetaTag('og:image');
+    const twitterImage = getMetaTag('twitter:image');
+    const schemaImage = getMetaTag('image'); // Generic <meta name="image">
     
-    // Fallback: look for twitter:image if og:image fails
-    const twitterImageMatch = html.match(/<meta\s+(?:property|name)=["']twitter:image["']\s+content=["'](.*?)["']/i);
+    // Fallback logic for various retailers
+    let imageUrl = ogImage || twitterImage || schemaImage;
 
-    // Fallback 2: grab the very first massive image tag we can find loosely
-    const genericImgMatch = html.match(/<img[^>]+src=["'](https:\/\/[^"']+)["']/i);
-
-    const imageUrl = (ogImageMatch && ogImageMatch[1]) || 
-                     (twitterImageMatch && twitterImageMatch[1]) || 
-                     (genericImgMatch && genericImgMatch[1]);
+    // Last resort fallback: check for common product image identifiers in the HTML
+    if (!imageUrl) {
+      console.log(`[SCRAPER] Meta tags failed, attempting generic img search...`);
+      // Try finding images with titles like "product", "main", "primary" in their src or alt
+      const genericImgMatch = html.match(/<img[^>]+src=["'](https:\/\/[^"']+(?:product|main|primary|large)[^"']+\.(?:jpg|jpeg|png|webp))["']/i) || 
+                              html.match(/<img[^>]+src=["'](https:\/\/[^"']+\.(?:jpg|jpeg|png|webp))["']/i);
+      imageUrl = genericImgMatch ? genericImgMatch[1] : null;
+    }
 
     if (!imageUrl) {
-      return res.status(404).json({ error: 'Could not detect a main product image on that page' });
+      console.error(`[SCRAPER ERROR] Could not find any suitable image for: ${productUrl}`);
+      return res.status(404).json({ error: 'Could not detect a main product image on that page. Please try another URL or upload manually.' });
     }
 
     // Fix relative URLs if any sneak through
     let finalUrl = imageUrl;
     if (finalUrl.startsWith('//')) {
       finalUrl = 'https:' + finalUrl;
+    } else if (finalUrl.startsWith('/')) {
+      try {
+        const urlObj = new URL(productUrl);
+        finalUrl = urlObj.origin + finalUrl;
+      } catch (err) {
+        console.error(`[SCRAPER ERROR] Failed to construct absolute URL from ${finalUrl}`);
+      }
     }
 
+    console.log(`[SCRAPER SUCCESS] Found image: ${finalUrl}`);
     res.json({ imageUrl: finalUrl });
 
   } catch (error) {
-    console.error('Scrape Image Error:', error.message);
-    res.status(500).json({ error: 'Failed to scrape the website. It might be heavily protected or invalid.' });
+    console.error(`[SCRAPER FATAL ERROR] ${error.message} for URL: ${req.body.productUrl}`);
+    if (error.response) {
+      console.error(`[SCRAPER STATUS] ${error.response.status} - ${error.response.statusText}`);
+    }
+    res.status(500).json({ 
+      error: 'Failed to scrape the website. It might be heavily protected or invalid.',
+      details: error.message
+    });
   }
 });
 
