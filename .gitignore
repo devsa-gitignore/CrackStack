@@ -6,3 +6,4 @@ build/
 *.whl
 __pycache__/
 venv/
+agent.md
