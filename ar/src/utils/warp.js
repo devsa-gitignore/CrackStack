@@ -132,7 +132,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   // Force the garment strictly higher (only for tops! bottoms sit rigidly at waist)
   if (!isBottom) {
-    customYOff -= (coreHeight * 0.12);
+    customYOff -= (coreHeight * 0.15);
   } else {
     // Bottoms should map exactly to waist with minor overlap
     customYOff -= (coreHeight * 0.02);
@@ -211,12 +211,12 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   // We only do this when the arm is within the Torso Region to preserve sleeves!
   if (arms && !isBottom) {
     // 1. Define the "Torso Bounds" as a clipping path
-    // This defines the "exclusion zone" where arms can pop over the cloth.
+    // Slightly tighter around the torso to prevent accidental shoulder-side clipping
     bufferCtx.beginPath();
-    bufferCtx.moveTo(leftShoulder.x - (shoulderWidth * 0.1), leftShoulder.y - (torsoHeight * 0.1));
-    bufferCtx.lineTo(rightShoulder.x + (shoulderWidth * 0.1), rightShoulder.y - (torsoHeight * 0.1));
-    bufferCtx.lineTo(rightHip.x + (shoulderWidth * 0.15), rightHip.y + (torsoHeight * 0.1));
-    bufferCtx.lineTo(leftHip.x - (shoulderWidth * 0.15), leftHip.y + (torsoHeight * 0.1));
+    bufferCtx.moveTo(leftShoulder.x, leftShoulder.y);
+    bufferCtx.lineTo(rightShoulder.x, rightShoulder.y);
+    bufferCtx.lineTo(rightHip.x + (shoulderWidth * 0.05), rightHip.y);
+    bufferCtx.lineTo(leftHip.x - (shoulderWidth * 0.05), leftHip.y);
     bufferCtx.closePath();
     bufferCtx.clip();
 
@@ -225,7 +225,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
     bufferCtx.lineJoin = 'round';
     
     // Physical arm thickness is approximately 30-35% of human shoulder width
-    bufferCtx.lineWidth = shoulderWidth * 0.35; 
+    bufferCtx.lineWidth = shoulderWidth * 0.28; // Slightly thinner stroke for less aggressive masking
 
     // Extract raw Z depths for 3D checks
     const ls_z = keypoints.ls_z || 0;
@@ -237,11 +237,19 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
       if (!arm || !arm.elbow || !arm.wrist) return;
       
       // 2. 3D Depth Check (MediaPipe Z: smaller means closer to camera)
-      // Only occlude if the arm is significantly in front of the body (-0.05 threshold)
-      if (arm_z_avg > body_z - 0.05) return;
+      // REDUCED SENSITIVITY: Requirement is now 0.12 (used to be 0.05)
+      // This means arm needs to be noticeably in front of the chest to trigger.
+      if (arm_z_avg > body_z - 0.12) return;
 
       bufferCtx.beginPath();
-      bufferCtx.moveTo(shoulder.x, shoulder.y);
+      // SHOLDER SAFETY: Start the erasure 25% down the arm towards the elbow
+      // This prevents the shirt's collar/shoulder area from being severed.
+      const armStart = {
+        x: shoulder.x + (arm.elbow.x - shoulder.x) * 0.25,
+        y: shoulder.y + (arm.elbow.y - shoulder.y) * 0.25
+      };
+      
+      bufferCtx.moveTo(armStart.x, armStart.y);
       bufferCtx.lineTo(arm.elbow.x, arm.elbow.y);
       bufferCtx.lineTo(arm.wrist.x, arm.wrist.y);
       

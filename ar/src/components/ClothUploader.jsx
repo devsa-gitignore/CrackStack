@@ -43,7 +43,7 @@ const getCroppedImg = async (imageSrc, pixelCrop) => {
   });
 };
 
-export default function ClothUploader({ onClothChange, onClose }) {
+export default function ClothUploader({ onClothChange, onClose, baseSnapshot, userContext }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -181,20 +181,34 @@ export default function ClothUploader({ onClothChange, onClose }) {
                 </div>
               </div>
             ) : (
-              <div className="w-full relative h-[40vh] min-h-[250px] rounded-xl overflow-hidden bg-black mb-4">
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={dynamicAspect}
-                  onMediaLoaded={(mediaSize) => {
-                    // Magically locks the crop box to the exact shape of the original image!
-                    setDynamicAspect(mediaSize.width / mediaSize.height);
-                  }}
-                  onCropChange={setCrop}
-                  onCropComplete={onCropComplete}
-                  onZoomChange={setZoom}
-                />
+            <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black mb-4 group">
+                {/* Reference Ghost Template */}
+                {baseSnapshot && (
+                  <div className="absolute inset-0 z-0 opacity-40 pointer-events-none flex items-center justify-center bg-gray-900">
+                    <img src={baseSnapshot} alt="reference" className="w-full h-full object-contain grayscale" />
+                    <div className="absolute top-4 left-4 bg-black/60 border border-white/20 px-3 py-1.5 rounded-lg">
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Your Metrics</p>
+                       <p className="text-sm font-mono text-emerald-400">
+                         {userContext?.dimensions?.shoulderWidth || '--'}W × {userContext?.dimensions?.torsoHeight || '--'}H
+                       </p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 z-10">
+                  <Cropper
+                    image={imageSrc}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={dynamicAspect}
+                    onMediaLoaded={(mediaSize) => {
+                      setDynamicAspect(mediaSize.width / mediaSize.height);
+                    }}
+                    onCropChange={setCrop}
+                    onCropComplete={onCropComplete}
+                    onZoomChange={setZoom}
+                  />
+                </div>
               </div>
             )}
 

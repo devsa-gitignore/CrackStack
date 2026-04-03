@@ -29,6 +29,7 @@ export default function useAREngine({
   useWarp = true,
   showSkeleton = false,
   onUserContextUpdate,
+  onBaseCapture,
 }) {
   const canvasRef = useRef(null);
   const wardrobeCacheRef = useRef({}); // Stores loaded image canvases by garment ID
@@ -174,6 +175,17 @@ export default function useAREngine({
                   ratio: (keypoints.torsoHeight / keypoints.shoulderWidth).toFixed(2)
                 }
               });
+
+              // 2. AUTO CAPTURE BASE SILHOUETTE!
+              // Since we're currently in the middle of frame drawing, we capture a snapshot
+              // of the canvas AFTER the skeleton logic (which happens next) or directly here.
+              // We'll use a 100ms timeout to ensure the skeleton layer is also rendered if it's on.
+              if (onBaseCapture) {
+                setTimeout(() => {
+                   onBaseCapture(ctx.canvas.toDataURL('image/png'));
+                }, 100);
+              }
+
               contextExtractedRef.current = true;
             }
           }
