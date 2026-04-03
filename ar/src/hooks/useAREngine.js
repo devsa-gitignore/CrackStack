@@ -170,6 +170,7 @@ export default function useAREngine({
                 dimensions: {
                   shoulderWidth: Math.round(keypoints.shoulderWidth),
                   torsoHeight: Math.round(keypoints.torsoHeight),
+                  eyeDistance: Math.round(keypoints.eyeDistance),
                   ratio: (keypoints.torsoHeight / keypoints.shoulderWidth).toFixed(2)
                 }
               });

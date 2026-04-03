@@ -92,7 +92,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   if (!keypoints || !img || imgW === 0 || imgW === undefined) return;
 
-  const { shoulderWidth, torsoHeight, anchorX, anchorY, angle, hipMid, hipWidth, legHeight, hipAngle, arms, leftShoulder, rightShoulder } = keypoints;
+  const { shoulderWidth, torsoHeight, anchorX, anchorY, angle, hipMid, hipWidth, legHeight, hipAngle, arms, leftShoulder, rightShoulder, leftHip, rightHip } = keypoints;
 
   let localTemplate = template;
   
@@ -208,8 +208,18 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   // If the user's arms cross in front of their body (e.g., crossing arms, reaching out),
   // we must forcefully erase the rendered fabric pixels precisely where the arm exists.
-  // This physically positions the shirt *behind* the user's hands!
+  // We only do this when the arm is within the Torso Region to preserve sleeves!
   if (arms && !isBottom) {
+    // 1. Define the "Torso Bounds" as a clipping path
+    // This defines the "exclusion zone" where arms can pop over the cloth.
+    bufferCtx.beginPath();
+    bufferCtx.moveTo(leftShoulder.x - (shoulderWidth * 0.1), leftShoulder.y - (torsoHeight * 0.1));
+    bufferCtx.lineTo(rightShoulder.x + (shoulderWidth * 0.1), rightShoulder.y - (torsoHeight * 0.1));
+    bufferCtx.lineTo(rightHip.x + (shoulderWidth * 0.15), rightHip.y + (torsoHeight * 0.1));
+    bufferCtx.lineTo(leftHip.x - (shoulderWidth * 0.15), leftHip.y + (torsoHeight * 0.1));
+    bufferCtx.closePath();
+    bufferCtx.clip();
+
     bufferCtx.globalCompositeOperation = 'destination-out';
     bufferCtx.lineCap = 'round';
     bufferCtx.lineJoin = 'round';
@@ -217,10 +227,19 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
     // Physical arm thickness is approximately 30-35% of human shoulder width
     bufferCtx.lineWidth = shoulderWidth * 0.35; 
 
-    const maskArm = (arm, shoulder) => {
-      // If we can't see the elbow/wrist, don't attempt to mask
+    // Extract raw Z depths for 3D checks
+    const ls_z = keypoints.ls_z || 0;
+    const rs_z = keypoints.rs_z || 0;
+    const body_z = (ls_z + rs_z) / 2;
+
+    const maskArm = (arm, shoulder, arm_z_avg) => {
+      // 1. Joint Visibility Check
       if (!arm || !arm.elbow || !arm.wrist) return;
       
+      // 2. 3D Depth Check (MediaPipe Z: smaller means closer to camera)
+      // Only occlude if the arm is significantly in front of the body (-0.05 threshold)
+      if (arm_z_avg > body_z - 0.05) return;
+
       bufferCtx.beginPath();
       bufferCtx.moveTo(shoulder.x, shoulder.y);
       bufferCtx.lineTo(arm.elbow.x, arm.elbow.y);
@@ -233,8 +252,8 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
       bufferCtx.stroke();
     };
 
-    maskArm(arms.left, leftShoulder);
-    maskArm(arms.right, rightShoulder);
+    maskArm(arms.left, leftShoulder, arms.left?.wrist?.z || 0);
+    maskArm(arms.right, rightShoulder, arms.right?.wrist?.z || 0);
   }
 
   // ==== CULTURAL & LAYERED GARMENT MASKING ====

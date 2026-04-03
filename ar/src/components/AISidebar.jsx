@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { calculateRealMeasurements, recommendSize, getFitAnalysis } from '../utils/sizeCalculator';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -107,8 +108,13 @@ export default function AISidebar({ garmentType, description, userContext, cloth
                   style={{backgroundColor: userContext.complexion}}
                   title="Detected Skin Tone"
                 />
-                <div className="bg-black/40 border border-white/10 rounded px-2 py-0.5 text-xs text-gray-300 font-mono tracking-tighter" title="Shoulder Width × Torso Height">
-                  {userContext.dimensions.shoulderWidth}W × {userContext.dimensions.torsoHeight}H
+                <div className="flex flex-col items-end">
+                  <div className="bg-black/40 border border-white/10 rounded px-2 py-0.5 text-xs text-gray-300 font-mono tracking-tighter" title="Shoulder Width × Torso Height">
+                    {userContext.dimensions.shoulderWidth}W × {userContext.dimensions.torsoHeight}H
+                  </div>
+                  {userContext.dimensions.eyeDistance > 0 && (
+                    <div className="text-[9px] text-indigo-300/60 font-mono mt-0.5" title="Detected Eye Distance (Reference Scale)">Ref: {userContext.dimensions.eyeDistance}px</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -219,6 +225,27 @@ export default function AISidebar({ garmentType, description, userContext, cloth
             <div className="p-4 bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border border-indigo-500/20 rounded-2xl">
               <h3 className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">Pro Style Tip</h3>
               <p className="text-white text-sm leading-relaxed">{data.style.style_tip}</p>
+            </div>
+
+            <div>
+              <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">Size Recommendation</h3>
+              <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-black text-white">{recommendSize(calculateRealMeasurements(userContext?.dimensions))}</p>
+                  <p className="text-[10px] text-indigo-300/70 font-bold uppercase mt-0.5">Best Fit for Your Frame</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Measurements (Est.)</p>
+                  <p className="text-sm font-mono text-gray-200">
+                    S: {calculateRealMeasurements(userContext?.dimensions)?.shoulder || '--'}cm
+                    <br/>
+                    T: {calculateRealMeasurements(userContext?.dimensions)?.torso || '--'}cm
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 text-[11px] text-gray-400 leading-relaxed italic">
+                {getFitAnalysis(calculateRealMeasurements(userContext?.dimensions), recommendSize(calculateRealMeasurements(userContext?.dimensions)))}
+              </p>
             </div>
 
             <div>

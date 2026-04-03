@@ -28,6 +28,8 @@ const LANDMARK = {
   RIGHT_WRIST: 16,
   LEFT_INDEX: 19,
   RIGHT_INDEX: 20,
+  LEFT_EYE: 2,
+  RIGHT_EYE: 5,
 };
 
 /**
@@ -101,6 +103,13 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
   const torsoHeight = distance(shoulderMid, hipMid);
   const hipWidth = distance(leftHip, rightHip);
 
+  // Eye distance (use for scale)
+  const le = landmarks[LANDMARK.LEFT_EYE];
+  const re = landmarks[LANDMARK.RIGHT_EYE];
+  const eyeDistance = (le && re && le.visibility > minVisibility && re.visibility > minVisibility)
+    ? distance({x: le.x * width, y: le.y * height}, {x: re.x * width, y: re.y * height})
+    : 0;
+
   // Leg data (if visible)
   let legHeight = torsoHeight * 2; // safe fallback
   const la = landmarks[LANDMARK.LEFT_ANKLE];
@@ -147,7 +156,7 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
   const getArmNode = (idx) => {
     const node = landmarks[idx];
     if (node && node.visibility > minVisibility) {
-      return { x: node.x * width, y: node.y * height, v: node.visibility };
+      return { x: node.x * width, y: node.y * height, z: node.z, v: node.visibility };
     }
     return null;
   };
@@ -174,9 +183,12 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
     torsoHeight,
     hipWidth,
     legHeight,
+    eyeDistance, // USED FOR SCALE CALIBRATION
     angle,
     hipAngle,
     yawAngle, // 3D YAW!
+    ls_z: ls.z,
+    rs_z: rs.z,
     anchorX: shoulderMid.x,
     anchorY: shoulderMid.y,
     arms, // EXPORTED ARM NODES!
