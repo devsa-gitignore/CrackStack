@@ -176,14 +176,21 @@ export default function useAREngine({
                 }
               });
 
-              // 2. AUTO CAPTURE BASE SILHOUETTE!
-              // Since we're currently in the middle of frame drawing, we capture a snapshot
-              // of the canvas AFTER the skeleton logic (which happens next) or directly here.
-              // We'll use a 100ms timeout to ensure the skeleton layer is also rendered if it's on.
-              if (onBaseCapture) {
-                setTimeout(() => {
-                   onBaseCapture(ctx.canvas.toDataURL('image/png'));
-                }, 100);
+              // 2. AUTO CAPTURE BASE SILHOUETTE! (Pure: Skeleton + Video, No Cloth)
+              if (onBaseCapture && !contextExtractedRef.current) {
+                // Temporarily draw skeleton if enabled
+                if (showSkeleton) drawDebugSkeleton(ctx, keypoints);
+                
+                // Capture the CLEAN frame now!
+                onBaseCapture(ctx.canvas.toDataURL('image/png'));
+                
+                // Clear the canvas and redraw the video to remove the skeleton before garments are drawn
+                // (Garments should be drawn over video, then skeleton drawn ON TOP for final view)
+                ctx.save();
+                ctx.translate(w, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, w, h);
+                ctx.restore();
               }
 
               contextExtractedRef.current = true;
@@ -213,7 +220,7 @@ export default function useAREngine({
             }
           });
 
-          // Debug skeleton
+          // Draw final skeleton on top of everything for the LIVE view
           if (showSkeleton) {
             drawDebugSkeleton(ctx, keypoints);
           }
