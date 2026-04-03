@@ -22,6 +22,12 @@ export default function AISidebar({ garmentType, description, userContext, cloth
   useEffect(() => {
     // If we have neither, then we stay idle
     if (!description && !garmentType) return;
+    
+    // IF we are in the shop tab but have no AI analysis yet, we wait for style first
+    if (activeTab === 'shop' && !data.style && clothBase64) {
+       setActiveTab('style'); // Switch to style first for analysis!
+    }
+
     if (data[activeTab]) return; // Already fetched for this specific garment
 
     const fetchData = async () => {
@@ -36,7 +42,8 @@ export default function AISidebar({ garmentType, description, userContext, cloth
 
         if (activeTab === 'shop') {
           endpoint = '/find-similar';
-          payload = { query: garmentId };
+          // Use AI Search Query if available, else fallback
+          payload = { query: data.style?.search_query || garmentId };
         } else if (activeTab === 'style') {
           endpoint = '/style-suggest';
           payload = {
@@ -80,7 +87,7 @@ export default function AISidebar({ garmentType, description, userContext, cloth
     };
 
     fetchData();
-  }, [activeTab, description, garmentType, data]);
+  }, [activeTab, description, garmentType, data, clothBase64]);
 
   // The AI is always "Online" but in standby if no garment is actively selected
   const activeDescription = description || garmentType || 'Casual Outfit';
@@ -160,6 +167,16 @@ export default function AISidebar({ garmentType, description, userContext, cloth
         {/* SHOP TAB (Feature 1) */}
         {activeTab === 'shop' && data.shop && (
           <div className="space-y-4">
+            {data.style?.search_query && (
+               <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl mb-4">
+                  <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse shadow-glow"></span>
+                    AI Context Match
+                  </p>
+                  <p className="text-xs text-indigo-200 italic font-medium">"{data.style.search_query}"</p>
+               </div>
+            )}
+
             {data.shop.results?.map((item, idx) => (
               <a 
                 key={idx}
@@ -226,6 +243,16 @@ export default function AISidebar({ garmentType, description, userContext, cloth
               <h3 className="text-indigo-300 text-xs font-bold uppercase tracking-wider mb-2">Pro Style Tip</h3>
               <p className="text-white text-sm leading-relaxed">{data.style.style_tip}</p>
             </div>
+
+            {data.style.trends && data.style.trends.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {data.style.trends.map((t, idx) => (
+                  <span key={idx} className="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                    🔥 {t}
+                  </span>
+                ))}
+              </div>
+            )}
 
             <div>
               <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-3">Size Recommendation</h3>

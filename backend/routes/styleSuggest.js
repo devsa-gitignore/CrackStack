@@ -38,10 +38,12 @@ Provide a strict JSON response with no other text, containing:
 1. "outfit_pairings": An array of 2 specific outfit suggestions incorporating the current cloth. They MUST complement the user's complexion and the requested occasion if provided.
 2. "occasion": Best occasions to wear this (If the user specified "${targetOccasion || 'none'}", write exactly why it fits that specific occasion).
 3. "style_tip": One actionable style upgrade tip tailored strictly to their complexion and proportion ratio.
+4. "search_query": A highly specific shopping search query string (in English) that describes similar but trending items currently popular (e.g. "Relaxed fit charcoal gray linen shirts India"). 
+5. "trends": An array of 2-3 short strings describing current fashion trends that this garment fits into (e.g. "Retro-Revival", "Minimalist Chic").
 
 Return ONLY valid JSON. Start with { and end with }. Do not add markdown backticks.
 Valid JSON example: 
-{"outfit_pairings":["...","..."], "occasion":"...", "style_tip":"..."}`;
+{"outfit_pairings":["...","..."], "occasion":"...", "style_tip":"...", "search_query":"...", "trends":["...","..."]}`;
 
     // Llama 3 Vision formatting
     const messages = [
