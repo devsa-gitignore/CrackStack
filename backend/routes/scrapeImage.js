@@ -1,84 +1,79 @@
 const express = require('express');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const router = express.Router();
 
 router.post('/scrape-image', async (req, res) => {
+  const { productUrl } = req.body;
   try {
-    const { productUrl } = req.body;
-    
     if (!productUrl || !productUrl.startsWith('http')) {
       return res.status(400).json({ error: 'A valid http(s) URL is required' });
     }
 
-    // Pretend to be a real browser so retail sites don't block us immediately
+    console.log(`[SCRAPER] Cheerio Fetching: ${productUrl}`);
+
     const response = await axios.get(productUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5'
       },
-      timeout: 8000
+      timeout: 10000
     });
 
-    const html = response.data;
+    const $ = cheerio.load(response.data);
 
-    console.log(`[SCRAPER] Processing URL: ${productUrl} (HTML Length: ${html.length})`);
+    // 1. Check OpenGraph image (og:image)
+    let imageUrl = $('meta[property="og:image"]').attr('content') || 
+                   $('meta[name="og:image"]').attr('content');
 
-    // Helper to extract content from meta tags more robustly
-    const getMetaTag = (tag) => {
-      // Matches both <meta property="..." content="..."> and <meta content="..." property="...">
-      const regex1 = new RegExp(`<meta[^>]+(?:property|name)=["']${tag}["'][^>]+content=["']([^"']+)["']`, 'i');
-      const regex2 = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${tag}["']`, 'i');
-      const match = html.match(regex1) || html.match(regex2);
-      return match ? match[1] : null;
-    };
-
-    const ogImage = getMetaTag('og:image');
-    const twitterImage = getMetaTag('twitter:image');
-    const schemaImage = getMetaTag('image'); // Generic <meta name="image">
-    
-    // Fallback logic for various retailers
-    let imageUrl = ogImage || twitterImage || schemaImage;
-
-    // Last resort fallback: check for common product image identifiers in the HTML
+    // 2. Check Twitter image (twitter:image)
     if (!imageUrl) {
-      console.log(`[SCRAPER] Meta tags failed, attempting generic img search...`);
-      // Try finding images with titles like "product", "main", "primary" in their src or alt
-      const genericImgMatch = html.match(/<img[^>]+src=["'](https:\/\/[^"']+(?:product|main|primary|large)[^"']+\.(?:jpg|jpeg|png|webp))["']/i) || 
-                              html.match(/<img[^>]+src=["'](https:\/\/[^"']+\.(?:jpg|jpeg|png|webp))["']/i);
-      imageUrl = genericImgMatch ? genericImgMatch[1] : null;
+      imageUrl = $('meta[name="twitter:image"]').attr('content') || 
+                 $('meta[property="twitter:image"]').attr('content');
+    }
+
+    // 3. Check for specific high-res product image markers
+    if (!imageUrl) {
+      imageUrl = $('link[rel="image_src"]').attr('href') ||
+                 $('meta[itemprop="image"]').attr('content');
+    }
+
+    // 4. Fallback: Find the first image with "product" or "main" in its name/alt
+    if (!imageUrl) {
+      console.log('[SCRAPER] Primary meta-tags missing, scanning img tags...');
+      const fallbackImg = $('img[src*="product"], img[src*="main"], img[alt*="product"], img[alt*="main"]').first().attr('src');
+      if (fallbackImg) imageUrl = fallbackImg;
+    }
+
+    // 5. Final fallback: just take the first high-res looking image
+    if (!imageUrl) {
+      const firstImg = $('img').filter((i, el) => {
+        const src = $(el).attr('src') || '';
+        return src.includes('https://') && !src.includes('pixel') && !src.includes('icon');
+      }).first().attr('src');
+      imageUrl = firstImg;
     }
 
     if (!imageUrl) {
-      console.error(`[SCRAPER ERROR] Could not find any suitable image for: ${productUrl}`);
-      return res.status(404).json({ error: 'Could not detect a main product image on that page. Please try another URL or upload manually.' });
+      console.error(`[SCRAPER] No image found for: ${productUrl}`);
+      return res.status(404).json({ error: 'No product image detected. Please upload manually.' });
     }
 
-    // Fix relative URLs if any sneak through
+    // Resolve relative URLs to absolute
     let finalUrl = imageUrl;
     if (finalUrl.startsWith('//')) {
       finalUrl = 'https:' + finalUrl;
     } else if (finalUrl.startsWith('/')) {
-      try {
-        const urlObj = new URL(productUrl);
-        finalUrl = urlObj.origin + finalUrl;
-      } catch (err) {
-        console.error(`[SCRAPER ERROR] Failed to construct absolute URL from ${finalUrl}`);
-      }
+      const urlObj = new URL(productUrl);
+      finalUrl = urlObj.origin + finalUrl;
     }
 
-    console.log(`[SCRAPER SUCCESS] Found image: ${finalUrl}`);
+    console.log(`[SCRAPER SUCCESS] Extracted: ${finalUrl}`);
     res.json({ imageUrl: finalUrl });
 
   } catch (error) {
-    console.error(`[SCRAPER FATAL ERROR] ${error.message} for URL: ${req.body.productUrl}`);
-    if (error.response) {
-      console.error(`[SCRAPER STATUS] ${error.response.status} - ${error.response.statusText}`);
-    }
-    res.status(500).json({ 
-      error: 'Failed to scrape the website. It might be heavily protected or invalid.',
-      details: error.message
-    });
+    console.error(`[SCRAPER ERROR] ${error.message} (Status: ${error.response?.status || 'N/A'}) - URL: ${productUrl}`);
+    res.status(500).json({ error: 'Failed to access the store URL. It might be blocking automated access.' });
   }
 });
 
