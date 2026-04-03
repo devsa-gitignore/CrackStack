@@ -6,3 +6,5 @@ build/
 *.whl
 __pycache__/
 venv/
+package.json
+package-lock.json
