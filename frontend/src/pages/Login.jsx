@@ -15,7 +15,11 @@ export default function App() {
 
   const handleAuthSubmit = (e) => {
     e.preventDefault();
-    navigate('/home');
+    if (isVendor) {
+      navigate('/vendor');
+    } else {
+      navigate('/home');
+    }
   };
 
   return (
