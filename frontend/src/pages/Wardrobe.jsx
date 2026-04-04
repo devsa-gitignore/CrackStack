@@ -1,162 +1,188 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, Heart, ShoppingBag, ArrowLeft } from 'lucide-react';
-import { motion } from 'motion/react';
-import Masonry from '../components/Masonry';
+import { ArrowLeft, Camera, Trash2, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
-const allItems = [
-  { id: 1, name: 'Classic Black Tee', category: 'T-Shirt', price: '₹1,499', img: '/images/shirt.png', height: 500 },
-  { id: 2, name: 'Charcoal Kurta', category: 'Kurta', price: '₹2,899', img: '/images/kurta.png', height: 600 },
-  { id: 3, name: 'Rider Jacket', category: 'Jacket', price: '₹5,999', img: '/images/jacket.png', height: 550 },
-  { id: 4, name: 'Black Silk Saree', category: 'Saree', price: '₹8,499', img: '/images/saree.png', height: 700 },
-  { id: 5, name: 'Royal Sherwani', category: 'Sherwani', price: '₹12,999', img: '/images/sherwani.png', height: 650 },
-  { id: 6, name: 'Bridal Lehenga', category: 'Lehenga', price: '₹18,499', img: '/images/lehenga.png', height: 700 },
-  { id: 7, name: 'Minimal Watch', category: 'Watch', price: '₹3,499', img: '/images/watch.png', height: 400 },
-  { id: 8, name: 'Formal Shirt', category: 'Shirt', price: '₹1,899', img: '/images/shirt.png', height: 500 },
-  { id: 9, name: 'Summer Kurta', category: 'Kurta', price: '₹2,199', img: '/images/kurta.png', height: 580 },
-  { id: 10, name: 'Denim Jacket', category: 'Jacket', price: '₹4,499', img: '/images/jacket.png', height: 520 },
-  { id: 11, name: 'Festive Saree', category: 'Saree', price: '₹6,999', img: '/images/saree.png', height: 680 },
-  { id: 12, name: 'Chronograph Watch', category: 'Watch', price: '₹7,999', img: '/images/watch.png', height: 420 },
+// Mock saved AR sessions — each has a photo and the clothes used
+const mockSessions = [
+  {
+    id: 1,
+    photo: '/images/hero.png',
+    date: 'Apr 3, 2026',
+    clothes: [
+      { name: 'Classic Black Tee', category: 'T-Shirt', img: '/images/shirt.png' },
+      { name: 'Rider Jacket', category: 'Jacket', img: '/images/jacket.png' },
+    ],
+  },
+  {
+    id: 2,
+    photo: '/images/hero.png',
+    date: 'Apr 2, 2026',
+    clothes: [
+      { name: 'Charcoal Kurta', category: 'Kurta', img: '/images/kurta.png' },
+    ],
+  },
+  {
+    id: 3,
+    photo: '/images/hero.png',
+    date: 'Apr 1, 2026',
+    clothes: [
+      { name: 'Royal Sherwani', category: 'Sherwani', img: '/images/sherwani.png' },
+      { name: 'Minimal Watch', category: 'Watch', img: '/images/watch.png' },
+    ],
+  },
 ];
 
-const filterCategories = ['All', 'T-Shirt', 'Shirt', 'Kurta', 'Jacket', 'Saree', 'Sherwani', 'Lehenga', 'Watch'];
-
 function Wardrobe() {
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [savedItems, setSavedItems] = useState(new Set());
+  const [sessions, setSessions] = useState(mockSessions);
+  const [expandedId, setExpandedId] = useState(null);
 
-  const filteredItems = allItems.filter(item => {
-    const matchesCategory = activeFilter === 'All' || item.category === activeFilter;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  const toggleSave = (id) => {
-    setSavedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const deleteSession = (id) => {
+    setSessions(prev => prev.filter(s => s.id !== id));
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen bg-white font-sans text-zinc-900 pb-28 pt-24">
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-zinc-100">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-4">
+      <header className="sticky top-[73px] z-40 bg-white/80 backdrop-blur-xl border-b border-zinc-100">
+        <div className="max-w-2xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/" className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors">
-                <ArrowLeft size={18} />
+            <div className="flex items-center gap-3">
+              <Link to="/home" className="flex items-center text-zinc-400 hover:text-zinc-900 transition-colors">
+                <ArrowLeft size={20} />
               </Link>
               <h1 className="text-xl font-extrabold tracking-tight">My Wardrobe</h1>
             </div>
-            <Link to="/" className="text-2xl font-extrabold tracking-tighter text-zinc-300 hover:text-zinc-900 transition-colors">
-              outfyt<span className="text-zinc-400">.</span>
-            </Link>
+            <span className="text-xs font-semibold text-zinc-400 tracking-wide uppercase">
+              {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
       </header>
 
-      {/* Search + Filters */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-8">
-        {/* Search Bar */}
-        <div className="relative mb-8">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search your wardrobe..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-zinc-50 border border-zinc-200 rounded-2xl pl-12 pr-14 py-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
-          />
-          <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 transition-colors">
-            <SlidersHorizontal size={16} />
-          </button>
-        </div>
+      <div className="max-w-2xl mx-auto px-6 pt-6">
 
-        {/* Filter pills */}
-        <div className="flex gap-2 flex-wrap mb-10">
-          {filterCategories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setActiveFilter(cat)}
-              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${
-                activeFilter === cat
-                  ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
-                  : 'bg-zinc-50 text-zinc-500 border border-zinc-200 hover:border-zinc-900 hover:text-zinc-900'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* Results count */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-sm text-zinc-400 font-medium">
-            {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} found
-          </div>
-          {savedItems.size > 0 && (
-            <div className="text-sm text-zinc-500 font-medium flex items-center gap-1.5">
-              <Heart size={14} className="fill-zinc-900 text-zinc-900" />
-              {savedItems.size} saved
+        {/* Empty state */}
+        {sessions.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-32 text-center"
+          >
+            <div className="w-20 h-20 rounded-full bg-zinc-100 flex items-center justify-center mb-6">
+              <Camera size={32} className="text-zinc-400" />
             </div>
-          )}
-        </div>
+            <h2 className="text-xl font-bold mb-2">No AR sessions yet</h2>
+            <p className="text-zinc-500 text-sm max-w-xs">
+              Try on clothes using the AR camera and your saved looks will appear here.
+            </p>
+          </motion.div>
+        )}
 
-        {/* Items grid — using product cards instead of masonry for wardrobe (cleaner UX) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-32">
-          {filteredItems.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-              className="group cursor-pointer"
-            >
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 mb-3">
-                <img
-                  src={item.img}
-                  alt={item.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-
-                {/* Save button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSave(item.id);
-                  }}
-                  className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    savedItems.has(item.id)
-                      ? 'bg-zinc-900 text-white'
-                      : 'bg-white/80 backdrop-blur-sm text-zinc-400 hover:text-zinc-900 opacity-0 group-hover:opacity-100'
-                  }`}
+        {/* Sessions list */}
+        <div className="space-y-4">
+          <AnimatePresence>
+            {sessions.map((session, i) => (
+              <motion.div
+                key={session.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="bg-zinc-50 rounded-2xl overflow-hidden border border-zinc-100"
+              >
+                {/* Session header */}
+                <div
+                  className="flex items-center gap-4 p-4 cursor-pointer hover:bg-zinc-100 transition-colors"
+                  onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                 >
-                  <Heart size={14} className={savedItems.has(item.id) ? 'fill-white' : ''} />
-                </button>
+                  {/* AR Photo thumbnail */}
+                  <div className="w-16 h-16 rounded-xl overflow-hidden bg-zinc-200 shrink-0">
+                    <img
+                      src={session.photo}
+                      alt="AR session"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
 
-                {/* Quick-try badge */}
-                <div className="absolute bottom-3 left-3 right-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                  <div className="bg-zinc-900/90 backdrop-blur-sm text-white text-xs font-semibold py-2.5 px-4 rounded-xl text-center flex items-center justify-center gap-2">
-                    <ShoppingBag size={12} />
-                    Quick Try-On
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold">AR Try-On Session</div>
+                    <div className="text-xs text-zinc-400 mt-0.5">{session.date}</div>
+                    <div className="text-xs text-zinc-500 mt-1">
+                      {session.clothes.length} item{session.clothes.length !== 1 ? 's' : ''} tried
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                      }}
+                      className="p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <ChevronRight
+                      size={18}
+                      className={`text-zinc-400 transition-transform duration-300 ${
+                        expandedId === session.id ? 'rotate-90' : ''
+                      }`}
+                    />
                   </div>
                 </div>
-              </div>
 
-              <div className="px-1">
-                <div className="text-xs text-zinc-400 font-semibold tracking-wide uppercase">{item.category}</div>
-                <h3 className="text-sm font-bold mt-0.5 tracking-tight">{item.name}</h3>
-                <div className="text-sm text-zinc-500 font-semibold mt-1">{item.price}</div>
-              </div>
-            </motion.div>
-          ))}
+                {/* Expanded: Clothes list */}
+                <AnimatePresence>
+                  {expandedId === session.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-zinc-200 px-4 py-3">
+                        <div className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-3">
+                          Clothes Used
+                        </div>
+                        <div className="space-y-3">
+                          {session.clothes.map((item, j) => (
+                            <div key={j} className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-200 shrink-0">
+                                <img
+                                  src={item.img}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold truncate">{item.name}</div>
+                                <div className="text-xs text-zinc-400">{item.category}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Full AR photo */}
+                      <div className="px-4 pb-4">
+                        <div className="rounded-xl overflow-hidden aspect-[3/4] bg-zinc-200 mt-3">
+                          <img
+                            src={session.photo}
+                            alt="AR session preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </div>
     </div>

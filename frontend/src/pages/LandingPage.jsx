@@ -44,7 +44,6 @@ function LandingPage() {
           <div className="hidden md:flex gap-10 text-[13px] font-medium tracking-wide uppercase text-zinc-500">
             <a href="#collections" className="hover:text-zinc-900 transition-colors duration-300">Collections</a>
             <a href="#features" className="hover:text-zinc-900 transition-colors duration-300">Features</a>
-            <Link to="/wardrobe" className="hover:text-zinc-900 transition-colors duration-300">Wardrobe</Link>
             <a href="#about" className="hover:text-zinc-900 transition-colors duration-300">About</a>
           </div>
           <Link
@@ -94,10 +93,10 @@ function LandingPage() {
               className="flex flex-wrap gap-4"
             >
               <Link
-                to="/wardrobe"
+                to="/login"
                 className="group inline-flex items-center gap-3 px-8 py-4 bg-zinc-900 text-white font-semibold rounded-full hover:bg-zinc-800 transition-all duration-300 hover:shadow-xl hover:shadow-zinc-900/25"
               >
-                Open Wardrobe
+                Try It On
                 <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <a
@@ -154,7 +153,6 @@ function LandingPage() {
                 <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                   <div className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-1">Featured</div>
                   <div className="text-lg font-extrabold text-zinc-900">Classic Black Tee</div>
-                  <div className="text-sm text-zinc-500 mt-1">₹1,499</div>
                 </div>
               }
             />
@@ -318,8 +316,8 @@ function LandingPage() {
               <h4 className="text-xs font-bold tracking-widest text-zinc-400 uppercase mb-4">Platform</h4>
               <ul className="space-y-3 text-sm">
                 <li><a href="#collections" className="hover:text-white transition-colors">Collections</a></li>
-                <li><Link to="/wardrobe" className="hover:text-white transition-colors">Wardrobe</Link></li>
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Try-On</a></li>
               </ul>
             </div>
             <div>
