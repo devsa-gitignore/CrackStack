@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './pages/LandingPage.jsx'
-import Login from './pages/Login'
-=======
 import './App.css'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.jsx'
@@ -54,20 +49,12 @@ function AppDock() {
     />
   );
 }
->>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
 
 function App() {
   const location = useLocation();
   const hideDock = location.pathname === '/' || location.pathname === '/login';
 
   return (
-<<<<<<< HEAD
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-=======
     <>
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -77,7 +64,6 @@ function App() {
       </Routes>
       {!hideDock && <AppDock />}
     </>
->>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
   )
 }
 
