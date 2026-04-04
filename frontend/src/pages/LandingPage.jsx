@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Scan, Ruler, Layers, Sparkles, ChevronDown } from 'lucide-react';
 import TiltedCard from '../components/TiltedCard';

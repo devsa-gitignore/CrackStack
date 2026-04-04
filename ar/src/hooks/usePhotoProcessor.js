@@ -45,7 +45,7 @@ export default function usePhotoProcessor({
         clothImgRef.current = img;
         resolve(img);
       };
-      img.onerror = () => reject(new Error('Failed to load cloth image'));
+      img.onerror = () => reject(new Error('Unable to load cloth image'));
     });
   }, [clothImageSrc]);
 
@@ -114,8 +114,8 @@ export default function usePhotoProcessor({
         URL.revokeObjectURL(photoUrl);
         return { success: true };
       } catch (err) {
-        console.error('Photo processing failed:', err);
-        return { success: false, error: 'Failed to process photo. Please try another image.' };
+        console.error('Photo processing unable:', err);
+        return { success: false, error: 'Unable to process photo. Please try another image.' };
       }
     },
     [detectImage, ensureClothLoaded]
