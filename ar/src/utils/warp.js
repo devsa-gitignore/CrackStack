@@ -256,20 +256,12 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   const topWidth = coreWidth * localTemplate.topWidthMult;
   const botWidth = coreWidth * localTemplate.botWidthMult;
 
-  // 4 corners of the destination trapezoid (before rotation)
-  const rawCorners = {
+  // Base unrotated rectangle corners
+  const rectCorners = {
     tl: { x: actAnchorX - topWidth / 2, y: actAnchorY + customYOff },
     tr: { x: actAnchorX + topWidth / 2, y: actAnchorY + customYOff },
     bl: { x: actAnchorX - botWidth / 2, y: actAnchorY + customYOff + customClothHeight },
     br: { x: actAnchorX + botWidth / 2, y: actAnchorY + customYOff + customClothHeight },
-  };
-
-  // Rotate all corners around the active anchor point by the active angle
-  const corners = {
-    tl: rotatePoint(rawCorners.tl.x, rawCorners.tl.y, actAnchorX, actAnchorY, actAngle),
-    tr: rotatePoint(rawCorners.tr.x, rawCorners.tr.y, actAnchorX, actAnchorY, actAngle),
-    bl: rotatePoint(rawCorners.bl.x, rawCorners.bl.y, actAnchorX, actAnchorY, actAngle),
-    br: rotatePoint(rawCorners.br.x, rawCorners.br.y, actAnchorX, actAnchorY, actAngle),
   };
 
   // Initialize offscreen buffer for masking
@@ -287,16 +279,37 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   // Clear previous frame data from buffer
   bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
 
-  // Subdivide into vertical strips for smoother warp on the buffer instead of main canvas
+  // Advance 2.5D Physical Draping: Subdivide into vertical strips
+  // Instead of a rigid trapezoid, we curve the bottom hem and simulate 3D chest cylinder yaw!
   for (let i = 0; i < NUM_STRIPS; i++) {
     const t0 = i / NUM_STRIPS;
     const t1 = (i + 1) / NUM_STRIPS;
 
-    // Interpolate left and right edges of this strip on the destination trapezoid
-    const dTopLeft  = { x: corners.tl.x + (corners.tr.x - corners.tl.x) * t0, y: corners.tl.y + (corners.tr.y - corners.tl.y) * t0 };
-    const dTopRight = { x: corners.tl.x + (corners.tr.x - corners.tl.x) * t1, y: corners.tl.y + (corners.tr.y - corners.tl.y) * t1 };
-    const dBotLeft  = { x: corners.bl.x + (corners.br.x - corners.bl.x) * t0, y: corners.bl.y + (corners.br.y - corners.bl.y) * t0 };
-    const dBotRight = { x: corners.bl.x + (corners.br.x - corners.bl.x) * t1, y: corners.bl.y + (corners.br.y - corners.bl.y) * t1 };
+    // Physics Drape: Add a natural downward curve to the hem (middle sags down)
+    const sag0 = Math.sin(t0 * Math.PI) * (customClothHeight * 0.08);
+    const sag1 = Math.sin(t1 * Math.PI) * (customClothHeight * 0.08);
+
+    // Initial Linear Interpolation
+    const baseTopL = { x: rectCorners.tl.x + (rectCorners.tr.x - rectCorners.tl.x) * t0, y: rectCorners.tl.y + (rectCorners.tr.y - rectCorners.tl.y) * t0 };
+    const baseTopR = { x: rectCorners.tl.x + (rectCorners.tr.x - rectCorners.tl.x) * t1, y: rectCorners.tl.y + (rectCorners.tr.y - rectCorners.tl.y) * t1 };
+    const baseBotL = { x: rectCorners.bl.x + (rectCorners.br.x - rectCorners.bl.x) * t0, y: rectCorners.bl.y + (rectCorners.br.y - rectCorners.bl.y) * t0 + sag0 };
+    const baseBotR = { x: rectCorners.bl.x + (rectCorners.br.x - rectCorners.bl.x) * t1, y: rectCorners.bl.y + (rectCorners.br.y - rectCorners.bl.y) * t1 + sag1 };
+
+    // Perspective Yaw Shift: Simulate the 3D cylinder of the body turning away from camera
+    const yawOffset = (keypoints.yawAngle || 0) * topWidth * 0.35;
+    const yawShift0 = Math.sin(t0 * Math.PI) * yawOffset;
+    const yawShift1 = Math.sin(t1 * Math.PI) * yawOffset;
+
+    baseTopL.x += yawShift0;
+    baseBotL.x += yawShift0;
+    baseTopR.x += yawShift1;
+    baseBotR.x += yawShift1;
+
+    // Apply strict 2D geometric angle rotation (leaning side to side)
+    const dTopLeft  = rotatePoint(baseTopL.x, baseTopL.y, actAnchorX, actAnchorY, actAngle);
+    const dTopRight = rotatePoint(baseTopR.x, baseTopR.y, actAnchorX, actAnchorY, actAngle);
+    const dBotLeft  = rotatePoint(baseBotL.x, baseBotL.y, actAnchorX, actAnchorY, actAngle);
+    const dBotRight = rotatePoint(baseBotR.x, baseBotR.y, actAnchorX, actAnchorY, actAngle);
 
     // Source coordinates on the flat image
     const sLeft  = t0 * imgW;
