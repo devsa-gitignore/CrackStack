@@ -222,13 +222,25 @@ export default function AISidebar({ garmentType, description, userContext, cloth
                 href={item.url}
                 target="_blank"
                 rel="noreferrer"
-                className="block p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition group"
+                className="block p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition group overflow-hidden"
               >
-                <h4 className="font-medium text-white group-hover:text-indigo-300 transition line-clamp-1">{item.title}</h4>
-                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{item.content}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-md">Try Buy</span>
-                  <span className="text-xs text-gray-500">{(item.score * 100).toFixed(0)}% Match</span>
+                <div className="flex gap-4">
+                  {item.image && (
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-16 h-16 object-cover rounded-lg border border-white/10 group-hover:border-indigo-500/50 transition shadow-sm" 
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-white group-hover:text-indigo-300 transition line-clamp-1 text-sm">{item.title}</h4>
+                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{item.content}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
+                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider">View Product</span>
+                  <span className="text-[10px] text-gray-500 font-mono">{(item.score * 100).toFixed(0)}% Match</span>
                 </div>
               </a>
             ))}
