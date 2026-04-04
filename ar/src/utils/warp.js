@@ -94,32 +94,47 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   // ── ACCESSORY ANCHORING (NEW) ──────────────────────────────────────────
   if (template.isHead) {
-    if (!keypoints.headTop) return;
-    const headScale = keypoints.eyeDistance * 2.5; 
-    const headAngle = keypoints.angle || 0; 
+    const { headTop, leftEye, rightEye, eyeDistance } = keypoints;
+    if (!headTop || !leftEye || !rightEye) return;
+    
+    // Scale calibrated to facial proportions
+    const headScale = eyeDistance * 2.5; 
+    
+    // Use eye-to-eye tilt for natural head rotation
+    const headTilt = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+    
     const clothWidth = headScale * template.widthMult;
     const clothHeight = headScale * template.heightMult;
     const yOff = headScale * (template.yOffset || 0);
 
     ctx.save();
-    ctx.translate(keypoints.headTop.x, keypoints.headTop.y + yOff);
-    ctx.rotate(headAngle);
+    ctx.translate(headTop.x, headTop.y + yOff);
+    ctx.rotate(headTilt);
     ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
     ctx.restore();
     return;
   }
 
   if (template.isFace) {
-    if (!keypoints.nose) return;
-    const faceScale = keypoints.eyeDistance * 1.5;
-    const faceAngle = keypoints.angle || 0;
-    const clothWidth = faceScale * template.widthMult;
-    const clothHeight = faceScale * template.heightMult;
-    const yOff = faceScale * (template.yOffset || 0);
+    const { leftEye, rightEye, eyeDistance } = keypoints;
+    if (!leftEye || !rightEye) return;
+
+    const eyeMidX = (leftEye.x + rightEye.x) / 2;
+    const eyeMidY = (leftEye.y + rightEye.y) / 2;
+    
+    // Calculate precise head tilt from eye positions
+    const headTilt = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
+    
+    // Width calibrated relative to eye-to-eye distance (Pupillary Distance)
+    const clothWidth = eyeDistance * template.widthMult;
+    const clothHeight = eyeDistance * template.heightMult;
+    const yOff = eyeDistance * (template.yOffset || 0);
 
     ctx.save();
-    ctx.translate(keypoints.nose.x, keypoints.nose.y + yOff);
-    ctx.rotate(faceAngle);
+    // Anchor precisely between eyes (the bridge region)
+    ctx.translate(eyeMidX, eyeMidY);
+    ctx.rotate(headTilt);
+    ctx.translate(0, yOff);
     ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
     ctx.restore();
     return;
@@ -198,53 +213,55 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   if (clothPins && clothPins.length === 4) {
     // ==== MANUAL CALIBRATION MODE ====
-    // User picked exact specific pixels on the source image for shoulders and hips.
+    // User picked 4 specific pixels on the source image for shoulders and hips.
+    // To make it idiot-proof, sort the 4 pins so the click order doesn't matter:
+    // 1. Sort by Y to separate Top from Bottom
+    const sortedByY = [...clothPins].sort((a, b) => a.y - b.y);
+    const topPins = sortedByY.slice(0, 2).sort((a, b) => a.x - b.x); // Top Left, Top Right
+    const botPins = sortedByY.slice(2, 4).sort((a, b) => a.x - b.x); // Bot Left, Bot Right
+
+    const pTL = topPins[0];
+    const pTR = topPins[1];
+    const pBL = botPins[0];
+    const pBR = botPins[1];
+
     // We mathematically derive the exact scale multipliers and vertical offsets!
-    const pinS_w = clothPins[1].x - clothPins[0].x; // Shoulders width ratio
-    const pinS_h = ((clothPins[2].y + clothPins[3].y) / 2) - ((clothPins[0].y + clothPins[1].y) / 2); // Torso height ratio
+    // We use Math.max to prevent division by zero in case of identical clicks
+    const pinS_w = Math.max(0.01, pTR.x - pTL.x); // Shoulders width ratio
+    const pinS_h = Math.max(0.01, ((pBL.y + pBR.y) / 2) - ((pTL.y + pTR.y) / 2)); // Torso height ratio
     const autoWidthMult = 1.0 / pinS_w;
     const autoHeightMult = 1.0 / pinS_h;
     
     // The top offset is calculated relative to where the top pins are located on the image.
-    const pinY_avg = (clothPins[0].y + clothPins[1].y) / 2;
+    const pinY_avg = (pTL.y + pTR.y) / 2;
     customYOff = -(pinY_avg / pinS_h) * coreHeight;
 
     localTemplate = {
       ...template,
       widthMult: autoWidthMult,
       topWidthMult: autoWidthMult,
-      botWidthMult: ((clothPins[3].x - clothPins[2].x) / pinS_w) * autoWidthMult,
+      botWidthMult: (Math.max(0, pBR.x - pBL.x) / pinS_w) * autoWidthMult,
       heightMult: autoHeightMult
     };
     customClothHeight = coreHeight * localTemplate.heightMult;
   }
 
-  // Force the garment strictly higher (only for tops! bottoms sit rigidly at waist)
+  // Final vertical position adjustment (Removing older hardcoded paddings)
   if (!isBottom) {
-    customYOff -= (coreHeight * 0.1);
-  } else {
-    // Bottoms should map exactly to waist with minor overlap
-    customYOff -= (coreHeight * 0.02);
+    // No extra shift needed when pins are used, as pins define the exact anchor.
+    // However, if no pins are used, the template yOffset handles the position.
   }
 
   // Calculate trapezoid dimensions
   const topWidth = coreWidth * localTemplate.topWidthMult;
   const botWidth = coreWidth * localTemplate.botWidthMult;
 
-  // 4 corners of the destination trapezoid (before rotation)
-  const rawCorners = {
+  // Base unrotated rectangle corners
+  const rectCorners = {
     tl: { x: actAnchorX - topWidth / 2, y: actAnchorY + customYOff },
     tr: { x: actAnchorX + topWidth / 2, y: actAnchorY + customYOff },
     bl: { x: actAnchorX - botWidth / 2, y: actAnchorY + customYOff + customClothHeight },
     br: { x: actAnchorX + botWidth / 2, y: actAnchorY + customYOff + customClothHeight },
-  };
-
-  // Rotate all corners around the active anchor point by the active angle
-  const corners = {
-    tl: rotatePoint(rawCorners.tl.x, rawCorners.tl.y, actAnchorX, actAnchorY, actAngle),
-    tr: rotatePoint(rawCorners.tr.x, rawCorners.tr.y, actAnchorX, actAnchorY, actAngle),
-    bl: rotatePoint(rawCorners.bl.x, rawCorners.bl.y, actAnchorX, actAnchorY, actAngle),
-    br: rotatePoint(rawCorners.br.x, rawCorners.br.y, actAnchorX, actAnchorY, actAngle),
   };
 
   // Initialize offscreen buffer for masking
@@ -262,16 +279,37 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   // Clear previous frame data from buffer
   bufferCtx.clearRect(0, 0, bufferCanvas.width, bufferCanvas.height);
 
-  // Subdivide into vertical strips for smoother warp on the buffer instead of main canvas
+  // Advance 2.5D Physical Draping: Subdivide into vertical strips
+  // Instead of a rigid trapezoid, we curve the bottom hem and simulate 3D chest cylinder yaw!
   for (let i = 0; i < NUM_STRIPS; i++) {
     const t0 = i / NUM_STRIPS;
     const t1 = (i + 1) / NUM_STRIPS;
 
-    // Interpolate left and right edges of this strip on the destination trapezoid
-    const dTopLeft  = { x: corners.tl.x + (corners.tr.x - corners.tl.x) * t0, y: corners.tl.y + (corners.tr.y - corners.tl.y) * t0 };
-    const dTopRight = { x: corners.tl.x + (corners.tr.x - corners.tl.x) * t1, y: corners.tl.y + (corners.tr.y - corners.tl.y) * t1 };
-    const dBotLeft  = { x: corners.bl.x + (corners.br.x - corners.bl.x) * t0, y: corners.bl.y + (corners.br.y - corners.bl.y) * t0 };
-    const dBotRight = { x: corners.bl.x + (corners.br.x - corners.bl.x) * t1, y: corners.bl.y + (corners.br.y - corners.bl.y) * t1 };
+    // Physics Drape: Add a natural downward curve to the hem (middle sags down)
+    const sag0 = Math.sin(t0 * Math.PI) * (customClothHeight * 0.08);
+    const sag1 = Math.sin(t1 * Math.PI) * (customClothHeight * 0.08);
+
+    // Initial Linear Interpolation
+    const baseTopL = { x: rectCorners.tl.x + (rectCorners.tr.x - rectCorners.tl.x) * t0, y: rectCorners.tl.y + (rectCorners.tr.y - rectCorners.tl.y) * t0 };
+    const baseTopR = { x: rectCorners.tl.x + (rectCorners.tr.x - rectCorners.tl.x) * t1, y: rectCorners.tl.y + (rectCorners.tr.y - rectCorners.tl.y) * t1 };
+    const baseBotL = { x: rectCorners.bl.x + (rectCorners.br.x - rectCorners.bl.x) * t0, y: rectCorners.bl.y + (rectCorners.br.y - rectCorners.bl.y) * t0 + sag0 };
+    const baseBotR = { x: rectCorners.bl.x + (rectCorners.br.x - rectCorners.bl.x) * t1, y: rectCorners.bl.y + (rectCorners.br.y - rectCorners.bl.y) * t1 + sag1 };
+
+    // Perspective Yaw Shift: Simulate the 3D cylinder of the body turning away from camera
+    const yawOffset = (keypoints.yawAngle || 0) * topWidth * 0.35;
+    const yawShift0 = Math.sin(t0 * Math.PI) * yawOffset;
+    const yawShift1 = Math.sin(t1 * Math.PI) * yawOffset;
+
+    baseTopL.x += yawShift0;
+    baseBotL.x += yawShift0;
+    baseTopR.x += yawShift1;
+    baseBotR.x += yawShift1;
+
+    // Apply strict 2D geometric angle rotation (leaning side to side)
+    const dTopLeft  = rotatePoint(baseTopL.x, baseTopL.y, actAnchorX, actAnchorY, actAngle);
+    const dTopRight = rotatePoint(baseTopR.x, baseTopR.y, actAnchorX, actAnchorY, actAngle);
+    const dBotLeft  = rotatePoint(baseBotL.x, baseBotL.y, actAnchorX, actAnchorY, actAngle);
+    const dBotRight = rotatePoint(baseBotR.x, baseBotR.y, actAnchorX, actAnchorY, actAngle);
 
     // Source coordinates on the flat image
     const sLeft  = t0 * imgW;
@@ -298,7 +336,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   // If the user's arms cross in front of their body (e.g., crossing arms, reaching out),
   // we must forcefully erase the rendered fabric pixels precisely where the arm exists.
   // We only do this when the arm is within the Torso Region to preserve sleeves!
-  if (arms && !isBottom) {
+  if (arms && !isBottom && leftShoulder && rightShoulder && leftHip && rightHip) {
     // 1. Define the "Torso Bounds" as a clipping path
     // Slightly tighter around the torso to prevent accidental shoulder-side clipping
     bufferCtx.beginPath();

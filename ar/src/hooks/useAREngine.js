@@ -35,6 +35,7 @@ export default function useAREngine({
   const wardrobeCacheRef = useRef({}); // Stores loaded image canvases by garment ID
   const animFrameRef = useRef(null);
   const contextExtractedRef = useRef(false);
+  const detectStartTimeRef = useRef(null);
 
   // ── Load ALL cloth images into cache ────────────────────────────────────────────────────
   useEffect(() => {
@@ -187,6 +188,41 @@ export default function useAREngine({
           if (onUserContextUpdate && !contextExtractedRef.current) {
             const nose = landmarks[0];
             if (nose && nose.visibility > 0.5) {
+              if (!detectStartTimeRef.current) {
+                detectStartTimeRef.current = Date.now();
+              }
+              const elapsed = Date.now() - detectStartTimeRef.current;
+              const countdownSecs = Math.ceil((3000 - elapsed) / 1000);
+
+              if (countdownSecs > 0) {
+                // Dim screen and show countdown
+                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                ctx.fillRect(0, 0, w, h);
+                
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 120px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(countdownSecs.toString(), w / 2, h / 2);
+                
+                ctx.font = 'bold 24px monospace';
+                ctx.fillStyle = '#10b981'; // Emerald 500
+                ctx.fillText("Stand back to capture your body outline...", w / 2, h / 2 + 100);
+                
+                // Reset text align
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                
+                // Draw skeleton partially transparent to help alignment
+                ctx.globalAlpha = 0.5;
+                if (showSkeleton) drawDebugSkeleton(ctx, keypoints);
+                ctx.globalAlpha = 1.0;
+
+                // Skip drawing garments until captured
+                animFrameRef.current = requestAnimationFrame(renderFrame);
+                return;
+              }
+
               const noseX = Math.floor((1 - nose.x) * w);
               const noseY = Math.floor(nose.y * h);
               let hex = '#e2b896'; // default fallback tone
@@ -240,7 +276,7 @@ export default function useAREngine({
           const isCategoryAvailable = (cat, k) => {
             switch (cat) {
               case 'over-head': return !!k.headTop;
-              case 'face':      return !!k.nose && (!!k.leftEye || !!k.rightEye);
+              case 'face':      return !!k.leftEye && !!k.rightEye; // Require both eyes for precise glasses fit/scaling
               case 'torso':     return !!k.leftShoulder && !!k.rightShoulder;
               case 'wrists':    return (!!k.arms?.left?.wrist && !!k.arms?.left?.elbow) || (!!k.arms?.right?.wrist && !!k.arms?.right?.elbow);
               case 'legs':      return !!k.leftHip && !!k.rightHip && (!!k.leftAnkle || !!k.leftKnee);

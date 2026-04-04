@@ -197,10 +197,10 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
     angle,
     hipAngle,
     yawAngle, // 3D YAW!
-    ls_z: ls.z,
-    rs_z: rs.z,
-    anchorX: shoulderMid.x,
-    anchorY: shoulderMid.y,
+    ls_z: ls?.z || 0,
+    rs_z: rs?.z || 0,
+    anchorX: shoulderMid?.x || 0,
+    anchorY: shoulderMid?.y || 0,
     arms, // EXPORTED ARM NODES!
     nose,
     leftEye,

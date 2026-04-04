@@ -160,6 +160,15 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
   
   // Dynamic Image Crop Aspect Ratio
   const [dynamicAspect, setDynamicAspect] = useState(3/4);
+  const [refAspect, setRefAspect] = useState(null);
+
+  useEffect(() => {
+    if (baseSnapshot) {
+      const img = new Image();
+      img.onload = () => setRefAspect(img.width / img.height);
+      img.src = baseSnapshot;
+    }
+  }, [baseSnapshot]);
 
   const onFileChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -332,14 +341,32 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
                 </div>
               </div>
               
-              <div className="w-full mt-6 flex flex-col gap-2">
-                <span className="text-gray-400 text-sm font-medium">Garment Type</span>
-                <div className="flex flex-wrap gap-2">
-                  {['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom', 'turban', 'glasses', 'watch', 'shoes'].map((type) => (
-                    <button key={type} onClick={() => setGarmentType(type)} className={`flex-1 py-1.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-tight transition-all border ${garmentType === type ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:bg-gray-700'}`}>
-                      {type.replace('_', ' ')}
-                    </button>
-                  ))}
+              <div className="w-full flex gap-4 mt-6">
+                <div className="flex-1 flex flex-col gap-2">
+                  <span className="text-gray-400 text-sm font-medium">Garment Type</span>
+                  <div className="flex flex-wrap gap-2">
+                    {['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom', 'turban', 'glasses', 'watch', 'shoes'].map((type) => (
+                      <button key={type} onClick={() => setGarmentType(type)} className={`flex-1 py-1.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-tight transition-all border ${garmentType === type ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:bg-gray-700'}`}>
+                        {type.replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="w-1/3 bg-indigo-900/20 border border-indigo-500/20 rounded-xl p-3 flex flex-col gap-2">
+                  <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">Cropping Tips</h3>
+                  <div className="flex gap-2 items-start">
+                    <span className="text-indigo-400 text-xs">🎯</span>
+                    <p className="text-[9px] text-indigo-200/80 leading-relaxed font-medium">Align the item with the translucent ghost body behind it.</p>
+                  </div>
+                  <div className="flex gap-2 items-start">
+                    <span className="text-indigo-400 text-xs">✂️</span>
+                    <p className="text-[9px] text-indigo-200/80 leading-relaxed font-medium">Crop as tight to edges as possible to avoid "floating" clothes.</p>
+                  </div>
+                  <div className="flex gap-2 items-start">
+                    <span className="text-indigo-400 text-xs">🔄</span>
+                    <p className="text-[9px] text-indigo-200/80 leading-relaxed font-medium">Use rotation to straighten if the photo is tilted.</p>
+                  </div>
                 </div>
               </div>
 
@@ -369,7 +396,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
               }
             </p>
 
-            <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black border-4 border-gray-800">
+            <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black border-4 border-gray-800 flex items-center justify-center">
               {/* GHOST REFERENCE BEHIND PINS (Sync with window size!) */}
               {baseSnapshot && (
                 <img 
@@ -379,21 +406,24 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
                 />
               )}
               
-              <img 
-                src={croppedOutput.url} 
-                className="w-full h-full object-contain cursor-crosshair select-none relative z-10 opacity-50"
-                draggable="false"
-                onClick={(e) => {
-                  if (pins.length >= 4) return;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  setPins([...pins, { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height }]);
-                }}
-              />
-              {pins.map((p, i) => (
-                <div key={i} className="absolute w-6 h-6 bg-red-500 rounded-full border-2 border-white pointer-events-none flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_15px_rgba(239,68,68,1)] z-20" style={{ left: `calc(${p.x * 100}% - 12px)`, top: `calc(${p.y * 100}% - 12px)` }}>
-                  {i+1}
-                </div>
-              ))}
+              {/* SHRINK-WRAPPED CONTAINER TO ENSURE PINS MAP EXACTLY TO IMAGE PIXELS */}
+              <div className="relative max-w-full max-h-full inline-flex font-[0px] z-10">
+                <img 
+                  src={croppedOutput.url} 
+                  className="max-w-full max-h-full cursor-crosshair select-none opacity-50 block"
+                  draggable="false"
+                  onClick={(e) => {
+                    if (pins.length >= 4) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setPins([...pins, { x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height }]);
+                  }}
+                />
+                {pins.map((p, i) => (
+                  <div key={i} className="absolute w-6 h-6 bg-red-500 rounded-full border-2 border-white pointer-events-none flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_15px_rgba(239,68,68,1)] z-20" style={{ left: `calc(${p.x * 100}% - 12px)`, top: `calc(${p.y * 100}% - 12px)` }}>
+                    {i+1}
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="flex w-full mt-2 justify-between items-center text-xs">

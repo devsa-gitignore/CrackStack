@@ -9,6 +9,8 @@ import UserProfile from './pages/UserProfile.jsx'
 import ProductPage from './pages/ProductPage.jsx'
 import CartPage from './pages/CartPage.jsx'
 import CheckoutPage from './pages/CheckoutPage.jsx'
+import VendorPanel from './pages/VendorPanel.jsx'
+import TryOn from './pages/TryOn.jsx'
 import Dock from './components/Dock.jsx'
 import { useShop } from './context/ShopContext.jsx'
 
@@ -35,7 +37,7 @@ function AppDock() {
     {
       icon: <Camera size={20} className="text-white" />,
       label: 'Try On',
-      onClick: () => navigate('/home')
+      onClick: () => navigate('/try-on')
     },
     {
       icon: <ShoppingBag size={20} className="text-white" />,
@@ -80,6 +82,7 @@ function AppHeader() {
           </button>
           <button
             type="button"
+            onClick={() => navigate('/try-on')}
             className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-zinc-800"
             title="Start AR Try-On"
           >
@@ -94,7 +97,7 @@ function AppHeader() {
 
 function App() {
   const location = useLocation()
-  const signedInRoutes = ['/home', '/wardrobe', '/user', '/cart', '/checkout']
+  const signedInRoutes = ['/home', '/wardrobe', '/user', '/cart', '/checkout', '/vendor', '/try-on']
   const showAppUI = signedInRoutes.includes(location.pathname) || location.pathname.startsWith('/product/')
 
   return (
@@ -108,6 +111,8 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/user" element={<UserProfile />} />
         <Route path="/wardrobe" element={<Wardrobe />} />
+        <Route path="/vendor" element={<VendorPanel />} />
+        <Route path="/try-on" element={<TryOn />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
