@@ -8,11 +8,15 @@ const wardrobeItemSchema = new mongoose.Schema({
   },
   imageUrl: {
     type: String,
-    required: true
+    required: false
+  },
+  images: {
+    type: [String],
+    default: []
   },
   clothType: {
     type: String,
-    enum: ['tshirt', 'shirt', 'jacket', 'kurta', 'dress', 'jeans', 'pants', 'pajama', 'hoodie', 'skirt'],
+    enum: ['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom', 'turban', 'glasses', 'watch', 'shoes', 'dress', 'jeans', 'pajama', 'hoodie', 'skirt'],
     required: true
   },
   colors: {

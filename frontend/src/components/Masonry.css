@@ -21,23 +21,23 @@
 }
 
 .masonry-card__shade {
-  opacity: 0.92;
+  opacity: 0.12;
   transition: opacity 220ms ease;
 }
 
 .masonry-card:hover .masonry-card__shade {
-  opacity: 0.28;
+  opacity: 0.92;
 }
 
 .masonry-card__content {
   z-index: 1;
   pointer-events: none;
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 0;
+  transform: translateY(16px);
   transition: opacity 220ms ease, transform 220ms ease;
 }
 
 .masonry-card:hover .masonry-card__content {
-  opacity: 0;
-  transform: translateY(16px);
+  opacity: 1;
+  transform: translateY(0);
 }

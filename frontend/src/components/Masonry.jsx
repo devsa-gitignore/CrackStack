@@ -59,8 +59,8 @@ const Masonry = ({
   colorShiftOnHover = false
 }) => {
   const columns = useMedia(
-    ['(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
-    [5, 4, 3, 2],
+    ['(min-width:2200px)', '(min-width:1800px)', '(min-width:1500px)', '(min-width:1000px)', '(min-width:600px)', '(min-width:400px)'],
+    [7, 6, 5, 4, 3, 2],
     1
   );
 
@@ -242,7 +242,7 @@ const Masonry = ({
                   )}
                 </div>
                 {item.price && (
-                  <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                  <span className="whitespace-nowrap rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
                     {item.price}
                   </span>
                 )}

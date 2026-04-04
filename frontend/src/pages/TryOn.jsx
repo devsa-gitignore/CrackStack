@@ -1,5 +1,4 @@
 import React, { useState, useRef, useCallback } from 'react';
-import Webcam from 'react-webcam';
 import { 
   X, Camera, ChevronUp, ChevronDown, 
   Sparkles, TrendingUp, Search, 
@@ -32,7 +31,7 @@ const TryOn = () => {
   ];
 
   const handleCapture = useCallback(() => {
-    const imageSrc = webcamRef.current.getScreenshot();
+    const imageSrc = '/images/hero.png';
     setRefImage(imageSrc);
     setShowRefImageModal(false);
   }, [webcamRef]);
@@ -54,13 +53,18 @@ const TryOn = () => {
       
       {/* 1. BACKGROUND CAMERA VIEW */}
       <div className="absolute inset-0 z-0">
-        <Webcam
-          audio={false}
-          ref={webcamRef}
-          screenshotFormat="image/jpeg"
-          className="h-full w-full object-cover"
-          videoConstraints={{ facingMode: "user" }}
-        />
+        <div className="relative h-full w-full bg-gradient-to-br from-zinc-950 via-black to-zinc-900">
+          <img src="/images/hero.png" alt="Try-on preview" className="h-full w-full object-cover opacity-45" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="rounded-[32px] border border-white/10 bg-black/30 px-8 py-6 text-center backdrop-blur-md">
+              <Camera size={30} className="mx-auto text-white/70" />
+              <p className="mt-3 text-xs font-bold uppercase tracking-[0.28em] text-white/80">Camera Preview</p>
+              <p className="mt-2 max-w-xs text-xs leading-5 text-white/45">
+                Live webcam is unavailable in this build, so a local preview panel is shown here instead.
+              </p>
+            </div>
+          </div>
+        </div>
         {/* Subtle camera overlay/vignette */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
       </div>

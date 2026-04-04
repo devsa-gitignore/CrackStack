@@ -11,6 +11,8 @@ import trendAnalysisRoutes from './routes/trendAnalysis.js';
 import scrapeImageRoutes from './routes/scrapeImage.js';
 import removeBgRoutes from './routes/removeBg.js';
 import wardrobeRoutes from './routes/wardrobeRoutes.js';
+import vendorRoutes from './routes/vendorRoutes.js';
+import buyerRoutes from './routes/buyerRoutes.js';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use('/api', trendAnalysisRoutes);
 app.use('/api', scrapeImageRoutes);
 app.use('/api', removeBgRoutes);
 app.use('/api', wardrobeRoutes);
+app.use('/api', vendorRoutes);
+app.use('/api', buyerRoutes);
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/crackstack';
