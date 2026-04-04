@@ -1,4 +1,5 @@
 import WardrobeItem from '../models/WardrobeItem.js';
+import Product from '../models/Product.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import { getAISuggestions } from '../utils/groqSuggest.js';
 import mongoose from 'mongoose';
@@ -68,16 +69,28 @@ const enrichWithAI = async (itemId, imageUrl, clothType, colors) => {
 // ─── CREATE ──────────────────────────────────────────────────────────────────
 export const createWardrobeItem = async (req, res) => {
   try {
-    const { imageUrl, clothType, colors, productLinks } = req.body;
+    const { imageUrl, images, clothType, colors, productLinks } = req.body;
 
-    if (!imageUrl || !clothType) {
-      return res.status(400).json({ error: 'imageUrl and clothType are required' });
+    if (!imageUrl && (!images || images.length === 0)) {
+      return res.status(400).json({ error: 'imageUrl or images array is required' });
     }
 
     // Upload base64 image to Cloudinary if needed
     let finalizedImageUrl = imageUrl;
-    if (imageUrl.startsWith('data:image')) {
+    if (imageUrl && imageUrl.startsWith('data:image')) {
       finalizedImageUrl = await uploadToCloudinary(imageUrl);
+    }
+    
+    // Upload multiple images if provided in combinations
+    let finalizedImages = [];
+    if (images && images.length > 0) {
+      for (const img of images) {
+        if (img.startsWith('data:image')) {
+          finalizedImages.push(await uploadToCloudinary(img));
+        } else {
+          finalizedImages.push(img);
+        }
+      }
     }
 
     const category = categorizeCloth(clothType);
@@ -86,6 +99,7 @@ export const createWardrobeItem = async (req, res) => {
     const newItem = new WardrobeItem({
       userId: 'demo-user',
       imageUrl: finalizedImageUrl,
+      images: finalizedImages,
       clothType,
       colors: colors || [],
       category,
@@ -102,7 +116,10 @@ export const createWardrobeItem = async (req, res) => {
     });
 
     // 🔄 Run AI in background WITHOUT awaiting (non-blocking)
-    enrichWithAI(newItem._id, finalizedImageUrl, clothType, colors || []);
+    const primaryImageForAI = finalizedImageUrl || (finalizedImages.length > 0 ? finalizedImages[0] : null);
+    if (primaryImageForAI) {
+      enrichWithAI(newItem._id, primaryImageForAI, clothType, colors || []);
+    }
 
   } catch (error) {
     console.error('Error creating wardrobe item:', error);
@@ -191,17 +208,25 @@ export const completeOutfit = async (req, res) => {
     const allItems = await WardrobeItem.find({ userId: 'demo-user' });
     const pool = allItems.filter(item => item._id.toString() !== baseItem._id.toString());
 
+    // Fetch vendor clothes (Product model) to see what can be bought
+    const vendorProducts = await Product.find({});
+
     const fromWardrobe = [];
+    const fromVendors = [];
     const aiSuggestions = [];
 
     // Only match against pairWith (NOT styleTip — it causes false positives)
     for (const suggestion of styleSuggestions.pairWith) {
       if (!suggestion) continue;
 
-      // Find ALL matching items for this suggestion (not just the first)
+      // Find ALL matching items for this suggestion in both models
       const matches = pool.filter(item => suggestionMatchesItem(suggestion, item, baseType));
+      const vMatches = vendorProducts.filter(item => suggestionMatchesItem(suggestion, item, baseType));
+
+      let foundMatch = false;
 
       if (matches.length > 0) {
+        foundMatch = true;
         for (const match of matches) {
           // Convert to object so we can add virtual fields for the UI
           const matchObj = match.toObject();
@@ -215,8 +240,23 @@ export const completeOutfit = async (req, res) => {
             fromWardrobe.push(matchObj);
           }
         }
-      } else {
-        aiSuggestions.push(suggestion);
+      }
+      
+      if (vMatches.length > 0) {
+        foundMatch = true;
+        for (const match of vMatches) {
+          const matchObj = match.toObject();
+          matchObj._matchReason = `Matched vendor product via: "${suggestion}"`;
+          
+          const alreadyAdded = fromVendors.some(m => m._id.toString() === matchObj._id.toString());
+          if (!alreadyAdded) {
+            fromVendors.push(matchObj);
+          }
+        }
+      }
+
+      if (!foundMatch) {
+         aiSuggestions.push(suggestion);
       }
     }
 
@@ -228,15 +268,17 @@ export const completeOutfit = async (req, res) => {
     });
 
     const limitedWardrobe = fromWardrobe.slice(0, 3);
+    const limitedVendors = fromVendors.slice(0, 5); // top 5 vendor recommendations
 
     res.status(200).json({
       baseItem,
       _matchingInfo: {
-        totalMatchesFound: fromWardrobe.length,
+        totalMatchesFound: fromWardrobe.length + fromVendors.length,
         showingTop: limitedWardrobe.length,
-        status: limitedWardrobe.length > 0 ? "Top matches identified" : "No matches"
+        status: (limitedWardrobe.length > 0 || fromVendors.length > 0) ? "Top matches identified" : "No matches"
       },
       fromWardrobe: limitedWardrobe,
+      fromVendors: limitedVendors,
       aiSuggestions,
       footwear: styleSuggestions.footwear || null
     });
