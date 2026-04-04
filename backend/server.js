@@ -32,16 +32,17 @@ app.use('/api', wardrobeRoutes);
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/crackstack';
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB Connection Error:', err));
+  .then(() => console.log(' Connected to MongoDB'))
+  .catch(err => console.error('MongoDB Connection Error:', err));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Node.js Backend running on http://localhost:${PORT}`);
+  console.log(` Node.js Backend running on http://localhost:${PORT}`);
   console.log('Available AI & Wardrobe Endpoints:');
   console.log(' - POST /api/find-similar');
   console.log(' - POST /api/style-suggest');
   console.log(' - POST /api/trend-analysis');
   console.log(' - POST /api/wardrobe (Smart Wardrobe Save)');
   console.log(' - GET  /api/wardrobe (List All Items)');
+  console.log(' - GET  /api/wardrobe/complete/:id (Outfit Completion)');
 });
