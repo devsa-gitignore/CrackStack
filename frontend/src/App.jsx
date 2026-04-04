@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx'
 import Wardrobe from './pages/Wardrobe.jsx'
 import Feed from './pages/Home.jsx' // This is the premium clothing feed
 import UserProfile from './pages/UserProfile.jsx'
+import TryOn from './pages/TryOn.jsx'
 import Dock from './components/Dock.jsx'
 
 function AppDock() {
@@ -42,8 +43,10 @@ function AppDock() {
 
 /* Floating AR Try-On button — top right on post-login screens */
 function ARButton() {
+  const navigate = useNavigate();
   return (
     <button
+      onClick={() => navigate('/try-on')}
       className="fixed top-6 right-6 z-50 w-14 h-14 rounded-full bg-zinc-900 text-white shadow-2xl shadow-zinc-900/40 flex items-center justify-center hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all duration-300 border border-zinc-800"
       title="Start AR Try-On"
     >
@@ -65,6 +68,7 @@ function App() {
         <Route path="/home" element={<Feed />} />
         <Route path="/user" element={<UserProfile />} />
         <Route path="/wardrobe" element={<Wardrobe />} />
+        <Route path="/try-on" element={<TryOn />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       

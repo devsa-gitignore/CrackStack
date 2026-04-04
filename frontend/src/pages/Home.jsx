@@ -1,16 +1,64 @@
 import React, { useState } from 'react';
-import { Search, Filter, ShoppingBag, Heart } from 'lucide-react';
+import { Search, ShoppingBag, Heart } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const products = [
-  { id: 1, name: 'Classic Black Tee', category: 'T-Shirt', price: '₹1,499', img: '/images/shirt.png' },
-  { id: 2, name: 'Rider Jacket', category: 'Jacket', price: '₹4,999', img: '/images/jacket.png' },
-  { id: 3, name: 'Charcoal Kurta', category: 'Kurta', price: '₹2,999', img: '/images/kurta.png' },
-  { id: 4, name: 'Royal Sherwani', category: 'Sherwani', price: '₹12,499', img: '/images/sherwani.png' },
-  { id: 5, name: 'Midnight Saree', category: 'Saree', price: '₹8,999', img: '/images/saree.png' },
-  { id: 6, name: 'Minimal Watch', category: 'Watch', price: '₹3,499', img: '/images/watch.png' },
-  { id: 7, name: 'Lehenga Top', category: 'Lehenga', price: '₹5,499', img: '/images/lehenga.png' },
-  { id: 8, name: 'Linen Pants', category: 'Pants', price: '₹2,199', img: '/images/shirt.png' }, // Reusing img for demo
+  {
+    id: 1,
+    name: 'Classic Tee',
+    category: 'T-Shirt',
+    price: '₹1,499',
+    img: '/images/shirt.png',
+  },
+  {
+    id: 2,
+    name: 'Rider Jacket',
+    category: 'Jacket',
+    price: '₹4,999',
+    img: '/images/jacket.png',
+  },
+  {
+    id: 3,
+    name: 'Charcoal Kurta',
+    category: 'Kurta',
+    price: '₹2,999',
+    img: '/images/kurta.png',
+  },
+  {
+    id: 4,
+    name: 'Royal Sherwani',
+    category: 'Sherwani',
+    price: '₹12,499',
+    img: '/images/sherwani.png',
+  },
+  {
+    id: 5,
+    name: 'Midnight Saree',
+    category: 'Saree',
+    price: '₹8,999',
+    img: '/images/saree.png',
+  },
+  {
+    id: 6,
+    name: 'Minimal Watch',
+    category: 'Watch',
+    price: '₹3,499',
+    img: '/images/watch.png',
+  },
+  {
+    id: 7,
+    name: 'Lehenga Top',
+    category: 'Lehenga',
+    price: '₹5,499',
+    img: '/images/lehenga.png',
+  },
+  {
+    id: 8,
+    name: 'Linen Shirt',
+    category: 'T-Shirt',
+    price: '₹2,199',
+    img: '/images/shirt.png',
+  },
 ];
 
 const categories = ['All', 'T-Shirt', 'Jacket', 'Kurta', 'Saree', 'Sherwani', 'Watch'];
@@ -66,41 +114,44 @@ export default function Home() {
       {/* Product Grid */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProducts.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="group"
-            >
-              <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 mb-3">
-                <img 
-                  src={product.img} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-                <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-zinc-400 hover:text-red-500 transition-colors">
-                  <Heart size={18} />
-                </button>
-                
-                {/* Quick Action Overlay */}
-                <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/60 to-transparent">
-                  <button className="w-full bg-white text-zinc-900 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-100 transition-colors">
-                    <ShoppingBag size={14} /> Try On
+          {filteredProducts.map((product, i) => {
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="group"
+              >
+                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-zinc-100 mb-3">
+                  <img
+                    src={product.img}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+
+                  <button className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-zinc-400 hover:text-red-500 transition-colors">
+                    <Heart size={18} />
                   </button>
+
+                  {/* Quick Action Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/60 to-transparent">
+                    <button className="w-full bg-white text-zinc-900 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-zinc-100 transition-colors">
+                      <ShoppingBag size={14} /> Try On
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="px-1">
-                <h3 className="text-sm font-bold truncate">{product.name}</h3>
-                <div className="flex items-center justify-between mt-0.5">
-                  <span className="text-xs text-zinc-500">{product.category}</span>
-                  <span className="text-sm font-black">{product.price}</span>
+
+                <div className="px-1">
+                  <h3 className="text-sm font-bold truncate">{product.name}</h3>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="text-xs text-zinc-500">{product.category}</span>
+                    <span className="text-sm font-black">{product.price}</span>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
         
         {filteredProducts.length === 0 && (
