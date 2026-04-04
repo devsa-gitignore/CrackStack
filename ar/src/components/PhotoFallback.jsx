@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import usePose from '../hooks/usePose';
 import usePhotoProcessor from '../hooks/usePhotoProcessor';
 
@@ -11,7 +11,9 @@ import usePhotoProcessor from '../hooks/usePhotoProcessor';
  *
  * You can completely redesign this component's UI without touching any AR code.
  */
-export default function PhotoFallback({ clothType = 'tshirt', clothImageSrc = '/mock-tshirt.png' }) {
+export default function PhotoFallback({ garment }) {
+  const clothType = garment?.type || 'tshirt';
+  const clothImageSrc = garment?.image || '/mock-tshirt.png';
   const fileInputRef = useRef(null);
   const [photoLoaded, setPhotoLoaded] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -19,11 +21,16 @@ export default function PhotoFallback({ clothType = 'tshirt', clothImageSrc = '/
 
   // ── AR hooks (pure logic, zero UI) ──────────────────────────────────────
   const { landmarkerReady, loadingProgress, detectImage } = usePose();
-  const { canvasRef, processPhoto } = usePhotoProcessor({
+  const { canvasRef, processPhoto, redraw } = usePhotoProcessor({
     detectImage,
     clothType,
     clothImageSrc,
   });
+
+  // Re-draw when garment changes (without re-upload)
+  useEffect(() => {
+    if (photoLoaded) redraw();
+  }, [garment, photoLoaded, redraw]);
 
   // ── Handle file selection ───────────────────────────────────────────────
   const handleFileSelect = useCallback(

@@ -3,6 +3,41 @@ import { calculateRealMeasurements, recommendSize, getFitAnalysis } from '../uti
 
 const API_BASE = 'http://localhost:5000/api';
 
+/**
+ * Heuristics to derive AI style preferences from a text occasion string.
+ */
+function deriveStyleProfile(occasion = '', userContext = null) {
+  const occ = occasion.toLowerCase();
+  
+  // Defaults
+  let colors = ['neutrals'];
+  let types = ['casual'];
+  
+  if (occ.includes('party') || occ.includes('club')) {
+    colors = ['vibrant', 'black', 'metallics'];
+    types = ['party wear', 'modern'];
+  } else if (occ.includes('wedding') || occ.includes('marriage') || occ.includes('festive') || occ.includes('diwali')) {
+    colors = ['traditional red', 'gold', 'royal blue', 'emeralds'];
+    types = ['ethnic', 'formal traditional'];
+  } else if (occ.includes('interview') || occ.includes('office') || occ.includes('meeting') || occ.includes('corporate')) {
+    colors = ['navy', 'charcoal', 'off-white'];
+    types = ['business formal', 'smart casual'];
+  } else if (occ.includes('date') || occ.includes('brunch')) {
+    colors = ['pastels', 'earthy tones'];
+    types = ['smart casual', 'chic'];
+  } else if (occ.includes('gym') || occ.includes('workout') || occ.includes('outdoor')) {
+    colors = ['neon', 'dark grays', 'blacks'];
+    types = ['activewear', 'breathable'];
+  }
+
+  return {
+    preferredColors: colors,
+    clothTypes: types,
+    complexion: userContext?.complexion || 'unknown',
+    bodyProportions: userContext?.dimensions || 'unknown'
+  };
+}
+
 export default function AISidebar({ garmentType, description, userContext, clothBase64 }) {
   const [activeTab, setActiveTab] = useState('shop');
   const [data, setData] = useState({ shop: null, style: null, trend: null });
@@ -20,9 +55,6 @@ export default function AISidebar({ garmentType, description, userContext, cloth
 
   // Auto-fetch data when tab changes or garment changes
   useEffect(() => {
-    // Discovery mode: even if no garment is selected, we show trending items
-    const isDiscovery = !description && !garmentType && !clothBase64;
-    
     // IF we are in the shop tab but have no AI analysis yet, we wait for style first
     if (activeTab === 'shop' && !data.style && clothBase64) {
        setActiveTab('style'); // Switch to style first for analysis!
@@ -52,12 +84,9 @@ export default function AISidebar({ garmentType, description, userContext, cloth
             currentCloth: garmentId,
             image: clothBase64,
             isDiscovery: isDefault,
-            styleProfile: { 
-              preferredColors: ['neutrals'], 
-              clothTypes: ['casual'],
-              complexion: userContext?.complexion || 'unknown',
-              bodyProportions: userContext?.dimensions || 'unknown'
-            }
+            isDiscovery: isDefault,
+            targetOccasion, // Include if user typed something
+            styleProfile: deriveStyleProfile(targetOccasion, userContext)
           };
         } else if (activeTab === 'trend') {
           endpoint = '/trend-analysis';
@@ -231,10 +260,7 @@ export default function AISidebar({ garmentType, description, userContext, cloth
                         currentCloth: description || garmentType,
                         image: clothBase64,
                         targetOccasion,
-                        styleProfile: { 
-                          complexion: userContext?.complexion || 'unknown',
-                          bodyProportions: userContext?.dimensions || 'unknown'
-                        }
+                        styleProfile: deriveStyleProfile(targetOccasion, userContext)
                       })
                     });
                     const result = await res.json();
