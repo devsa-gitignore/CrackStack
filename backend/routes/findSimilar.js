@@ -22,9 +22,9 @@ router.post('/find-similar', async (req, res) => {
       console.log('[findSimilar] Using Mock Results (No Tavily Key)');
       return res.json({
         results: [
-          { title: "Navy Blue Crew Neck T-Shirt", url: "https://www.myntra.com/tshirts/", content: "₹499. Classic fit.", score: 0.95 },
-          { title: "Basic Blue Tee - Zara", url: "https://www.zara.com/in/", content: "₹990. Premium cotton.", score: 0.88 },
-          { title: "Men's Solid Regular Fit H&M", url: "https://www2.hm.com/en_in/", content: "₹399. Sustainable material.", score: 0.85 }
+          { title: "Navy Blue Crew Neck T-Shirt", url: "https://www.myntra.com/tshirts/", content: "₹499. Classic fit.", score: 0.95, image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200" },
+          { title: "Basic Blue Tee - Zara", url: "https://www.zara.com/in/", content: "₹990. Premium cotton.", score: 0.88, image: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=200" },
+          { title: "Men's Solid Regular Fit H&M", url: "https://www2.hm.com/en_in/", content: "₹399. Sustainable material.", score: 0.85, image: "https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=200" }
         ]
       });
     }
@@ -35,7 +35,7 @@ router.post('/find-similar', async (req, res) => {
       query: `${query} buy online India clothing`,
       max_results: 5,
       search_depth: 'basic',
-      include_images: false // True uses more credits if image results are needed
+      include_images: true // Enabled for visual shop match
     });
 
     res.json({ results: response.data.results });
