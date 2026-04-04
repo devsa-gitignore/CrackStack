@@ -1,30 +1,9 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Sparkles, Heart } from 'lucide-react';
 import Masonry from '../components/Masonry';
 import MagicBento from '../components/MagicBento';
-
-const products = [
-  { id: '1', name: 'Classic Black Tee', category: 'T-Shirt', badge: 'Daily Wear', price: 'Rs 1,499', img: '/images/shirt.png', height: 520, description: 'Soft monochrome staple for relaxed city fits.' },
-  { id: '2', name: 'Rider Jacket', category: 'Jacket', badge: 'Outerwear', price: 'Rs 4,999', img: '/images/jacket.png', height: 680, description: 'A sharper layer for cooler evenings and bold styling.' },
-  { id: '3', name: 'Charcoal Kurta', category: 'Kurta', badge: 'Festive', price: 'Rs 2,999', img: '/images/kurta.png', height: 560, description: 'Clean tailoring designed for elegant everyday celebrations.' },
-  { id: '4', name: 'Royal Sherwani', category: 'Sherwani', badge: 'Wedding', price: 'Rs 12,499', img: '/images/sherwani.png', height: 760, description: 'A grand silhouette made for standout ceremonial moments.' },
-  { id: '5', name: 'Midnight Saree', category: 'Saree', badge: 'Occasion', price: 'Rs 8,999', img: '/images/saree.png', height: 720, description: 'Fluid drape and evening shine in one refined piece.' },
-  { id: '6', name: 'Minimal Watch', category: 'Watch', badge: 'Accessory', price: 'Rs 3,499', img: '/images/watch.png', height: 430, description: 'A polished accent to complete both festive and casual looks.' },
-  { id: '7', name: 'Bridal Lehenga', category: 'Lehenga', badge: 'Statement', price: 'Rs 15,499', img: '/images/lehenga.png', height: 780, description: 'Rich volume and detail for the biggest celebration edits.' },
-  { id: '8', name: 'Structured Shirt', category: 'Shirt', badge: 'Modern', price: 'Rs 2,199', img: '/images/shirt.png', height: 500, description: 'A crisp silhouette for versatile weekday and weekend styling.' },
-  { id: '9', name: 'Ivory Festive Kurta', category: 'Kurta', badge: 'Celebration', price: 'Rs 3,299', img: '/images/kurta.png', height: 610, description: 'Lighter tones and refined details for polished festive dressing.' },
-  { id: '10', name: 'Velvet Sherwani', category: 'Sherwani', badge: 'Premium', price: 'Rs 16,999', img: '/images/sherwani.png', height: 820, description: 'Heavy texture and regal structure for grand wedding styling.' },
-  { id: '11', name: 'Rose Gold Saree', category: 'Saree', badge: 'Evening', price: 'Rs 9,499', img: '/images/saree.png', height: 700, description: 'Soft shimmer and fluid drape built for night celebrations.' },
-  { id: '12', name: 'Cropped Moto Jacket', category: 'Jacket', badge: 'Street', price: 'Rs 5,499', img: '/images/jacket.png', height: 640, description: 'Sharper proportions for a younger, more expressive silhouette.' },
-  { id: '13', name: 'Pearl Lehenga Set', category: 'Lehenga', badge: 'Bridal', price: 'Rs 18,499', img: '/images/lehenga.png', height: 840, description: 'Voluminous bridal styling with rich movement and detail.' },
-  { id: '14', name: 'Steel Watch', category: 'Watch', badge: 'Minimal', price: 'Rs 4,199', img: '/images/watch.png', height: 390, description: 'Compact and clean, made to finish a dressed-up fit.' },
-  { id: '15', name: 'Indigo Layer Shirt', category: 'Shirt', badge: 'Smart Casual', price: 'Rs 2,799', img: '/images/shirt.png', height: 560, description: 'An elevated shirt for sharper everyday styling.' },
-  { id: '16', name: 'Ceremony Saree', category: 'Saree', badge: 'Signature', price: 'Rs 10,999', img: '/images/saree.png', height: 760, description: 'Elegant drape and richer tone for standout entrances.' },
-  { id: '17', name: 'Textured Jacket', category: 'Jacket', badge: 'New Drop', price: 'Rs 6,299', img: '/images/jacket.png', height: 690, description: 'A bold outer layer with modern structure and edge.' },
-  { id: '18', name: 'Heritage Sherwani', category: 'Sherwani', badge: 'Ceremony', price: 'Rs 17,499', img: '/images/sherwani.png', height: 860, description: 'Long-line tailoring with presence and celebration-ready detail.' }
-];
-
-const categories = ['All', 'T-Shirt', 'Shirt', 'Jacket', 'Kurta', 'Sherwani', 'Saree', 'Lehenga', 'Watch'];
+import { bentoCards, categories, products } from '../data/products';
 
 const priceBands = [
   {
@@ -49,50 +28,6 @@ const priceBands = [
   }
 ];
 
-const bentoCards = [
-  {
-    label: 'Fit',
-    title: 'See size-friendly picks faster',
-    description: 'Browse silhouettes that make sense for quick try-on instead of guessing from a flat catalog.',
-    background: 'linear-gradient(145deg, #111827 0%, #1f2937 100%)'
-  },
-  {
-    label: 'Try On',
-    title: 'Move from browse to camera in one step',
-    description: 'The feed is designed to lead naturally into AR instead of feeling separate from it.',
-    background: 'linear-gradient(180deg, #172554 0%, #1d4ed8 100%)'
-  },
-  {
-    label: 'Wardrobe',
-    title: 'Keep the looks worth coming back to',
-    description: 'Save standout outfits now and revisit them later from your wardrobe flow.',
-    background: 'linear-gradient(180deg, #1c1917 0%, #292524 100%)'
-  },
-  {
-    label: 'Occasion',
-    title: 'Spot festive pieces at a glance',
-    description: 'Sherwani, saree, and lehenga cards stay visually stronger so occasion wear stands out immediately.',
-    background: 'linear-gradient(180deg, #312e81 0%, #1e1b4b 100%)'
-  },
-  {
-    label: 'Daily',
-    title: 'Balance statement looks with essentials',
-    description: 'Jackets, shirts, kurtas, and tees keep the feed wearable instead of overwhelming.',
-    background: 'linear-gradient(180deg, #0f172a 0%, #334155 100%)'
-  },
-  {
-    label: 'Save',
-    title: 'Build your shortlist while you browse',
-    description: 'Use the feed as a quick discovery layer before committing outfits to your wardrobe.',
-    background: 'linear-gradient(180deg, #292524 0%, #44403c 100%)'
-  }
-];
-import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import Masonry from '../components/Masonry';
-import MagicBento from '../components/MagicBento';
-import { bentoCards, categories, products } from '../data/products';
-
 export default function Home() {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('All');
@@ -104,25 +39,23 @@ export default function Home() {
 
   const availableBadges = useMemo(() => ['All', ...new Set(products.map((product) => product.badge))], []);
 
-  const parsePrice = (priceText) => Number(priceText.replace(/[^0-9]/g, ''));
-
   const filteredProducts = useMemo(() => {
     const baseFiltered = products.filter((product) => {
       const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesBadge = activeBadge === 'All' || product.badge === activeBadge;
       const band = priceBands.find((entry) => entry.id === activePriceBand) ?? priceBands[0];
-      const matchesPriceBand = band.predicate(parsePrice(product.price));
+      const matchesPriceBand = band.predicate(product.numericPrice);
 
       return matchesCategory && matchesSearch && matchesBadge && matchesPriceBand;
     });
 
     if (sortBy === 'price-low-high') {
-      return [...baseFiltered].sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+      return [...baseFiltered].sort((a, b) => a.numericPrice - b.numericPrice);
     }
 
     if (sortBy === 'price-high-low') {
-      return [...baseFiltered].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+      return [...baseFiltered].sort((a, b) => b.numericPrice - a.numericPrice);
     }
 
     return baseFiltered;
@@ -220,39 +153,24 @@ export default function Home() {
                 <div>
                   <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-zinc-400">Sort</p>
                   <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setSortBy('featured')}
-                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
-                        sortBy === 'featured'
-                          ? 'border-zinc-900 bg-zinc-900 text-white'
-                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
-                      }`}
-                    >
-                      Featured
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSortBy('price-low-high')}
-                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
-                        sortBy === 'price-low-high'
-                          ? 'border-zinc-900 bg-zinc-900 text-white'
-                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
-                      }`}
-                    >
-                      Price: Low to High
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSortBy('price-high-low')}
-                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
-                        sortBy === 'price-high-low'
-                          ? 'border-zinc-900 bg-zinc-900 text-white'
-                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
-                      }`}
-                    >
-                      Price: High to Low
-                    </button>
+                    {[
+                      { id: 'featured', label: 'Featured' },
+                      { id: 'price-low-high', label: 'Price: Low to High' },
+                      { id: 'price-high-low', label: 'Price: High to Low' }
+                    ].map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setSortBy(option.id)}
+                        className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                          sortBy === option.id
+                            ? 'border-zinc-900 bg-zinc-900 text-white'
+                            : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
