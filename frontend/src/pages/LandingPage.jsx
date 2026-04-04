@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Scan, Ruler, Layers, Sparkles, ChevronDown } from 'lucide-react';
 import TiltedCard from '../components/TiltedCard';
@@ -32,7 +32,6 @@ function FadeInSection({ children, delay = 0, className = '' }) {
 }
 
 function LandingPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-white font-sans text-zinc-900 selection:bg-zinc-900 selection:text-white overflow-x-hidden">
 

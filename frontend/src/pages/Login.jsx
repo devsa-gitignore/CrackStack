@@ -13,11 +13,7 @@ export default function App() {
   const vendorImg = "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=1200";
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-y-auto lg:overflow-hidden">
-=======
-    <div style={{ height: '100vh', display: 'flex', width: '100%', overflow: 'hidden' }} className="bg-white font-sans text-zinc-900">
->>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
       
       {/* LEFT PANEL - DYNAMIC VISUAL CANVAS */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-zinc-900">
@@ -55,13 +51,8 @@ export default function App() {
       </div>
 
       {/* RIGHT PANEL - AUTHENTICATION ENGINE */}
-<<<<<<< HEAD
       <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen lg:h-screen lg:overflow-y-auto">
         <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 md:p-24 min-h-max">
-=======
-      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'auto' }} className="lg:w-1/2 bg-white">
-        <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} className="sm:p-12 md:p-24">
->>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
           
           {/* Logo */}
           <div className="mb-12 text-center w-full max-w-sm">
