@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
+import './Masonry.css';
 
 const useMedia = (queries, values, defaultValue) => {
   const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
@@ -117,6 +118,11 @@ const Masonry = ({
     });
   }, [columns, items, width]);
 
+  const totalHeight = useMemo(() => {
+    if (!grid.length) return 0;
+    return Math.max(...grid.map(item => item.y + item.h));
+  }, [grid]);
+
   const hasMounted = useRef(false);
 
   useLayoutEffect(() => {
@@ -190,24 +196,58 @@ const Masonry = ({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
+    <div
+      ref={containerRef}
+      className="masonry-list relative w-full"
+      style={{ height: totalHeight ? `${totalHeight}px` : undefined }}
+    >
       {grid.map(item => (
         <div
           key={item.id}
           data-key={item.id}
-          className="absolute box-content"
+          className="masonry-item absolute box-content cursor-pointer"
           style={{ willChange: 'transform, width, height, opacity' }}
-          onClick={item.onClick || undefined}
+          onClick={item.onClick || (() => item.url && window.open(item.url, '_blank', 'noopener'))}
           onMouseEnter={e => handleMouseEnter(item.id, e.currentTarget)}
           onMouseLeave={e => handleMouseLeave(item.id, e.currentTarget)}
         >
           <div
-            className="relative w-full h-full bg-cover bg-center rounded-[10px] shadow-[0px_10px_50px_-10px_rgba(0,0,0,0.2)] uppercase text-[10px] leading-[10px]"
+            className="masonry-card relative w-full h-full overflow-hidden rounded-[24px] bg-cover bg-center shadow-[0px_20px_60px_-20px_rgba(15,23,42,0.35)]"
             style={{ backgroundImage: `url(${item.img})` }}
           >
+            <div className="masonry-card__shade absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-900/30 to-transparent" />
             {colorShiftOnHover && (
               <div className="color-overlay absolute inset-0 rounded-[10px] bg-gradient-to-tr from-pink-500/50 to-sky-500/50 opacity-0 pointer-events-none" />
             )}
+            <div className="masonry-card__content absolute inset-x-0 bottom-0 p-4 text-white">
+              {item.badge && (
+                <span className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-100 backdrop-blur-sm">
+                  {item.badge}
+                </span>
+              )}
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  {item.category && (
+                    <p className="text-xs font-medium uppercase tracking-[0.24em] text-zinc-300">
+                      {item.category}
+                    </p>
+                  )}
+                  <h3 className="mt-2 text-lg font-black tracking-tight text-white">
+                    {item.title || item.name}
+                  </h3>
+                  {item.description && (
+                    <p className="mt-1 max-w-[18rem] text-sm leading-5 text-zinc-200">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+                {item.price && (
+                  <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                    {item.price}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       ))}
