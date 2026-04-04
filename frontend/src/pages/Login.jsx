@@ -13,7 +13,11 @@ export default function App() {
   const vendorImg = "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=1200";
 
   return (
-    <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-hidden">
+<<<<<<< HEAD
+    <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-y-auto lg:overflow-hidden">
+=======
+    <div style={{ height: '100vh', display: 'flex', width: '100%', overflow: 'hidden' }} className="bg-white font-sans text-zinc-900">
+>>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
       
       {/* LEFT PANEL - DYNAMIC VISUAL CANVAS */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-zinc-900">
@@ -51,16 +55,21 @@ export default function App() {
       </div>
 
       {/* RIGHT PANEL - AUTHENTICATION ENGINE */}
-      <div className="w-full lg:w-1/2 flex flex-col relative h-screen overflow-y-auto">
-        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 md:p-24 min-h-max">
+<<<<<<< HEAD
+      <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen lg:h-screen lg:overflow-y-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 md:p-24 min-h-max">
+=======
+      <div style={{ width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column', overflowY: 'auto' }} className="lg:w-1/2 bg-white">
+        <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }} className="sm:p-12 md:p-24">
+>>>>>>> af4679832c01228140aa62e4d98bdafb4ef7db83
           
           {/* Logo */}
           <div className="mb-12 text-center w-full max-w-sm">
-            <h1 className="text-4xl font-extrabold tracking-tighter">xyz.</h1>
+            <h1 className="text-4xl font-extrabold tracking-tighter">outfyt<span className="text-zinc-400">.</span></h1>
           </div>
 
           {/* Master Switch (Shopper vs Vendor) */}
-          <div className="flex bg-zinc-100 p-1 rounded-full mb-10 relative w-full max-w-sm shadow-inner">
+          <div className="flex bg-zinc-100 rounded-full relative w-full max-w-sm" style={{ padding: '4px', marginBottom: '2.5rem', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
             <div 
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-sm transition-all duration-300 ease-out z-0
                 ${isVendor ? 'left-[calc(50%+2px)]' : 'left-1'}`} 
@@ -125,16 +134,16 @@ export default function App() {
                     <a href="#" className="text-sm font-medium text-zinc-900 hover:underline">Forgot password?</a>
                   </div>
 
-                  <SubmitButton text={`Sign In to ${isVendor ? 'Dashboard' : 'xyz.'}`} />
+                  <SubmitButton text={`Sign In to ${isVendor ? 'Dashboard' : 'Outfyt'}`} />
 
                   {/* Social Auth (Shoppers Only) */}
                   {!isVendor && (
-                    <div className="pt-6">
+                    <div className="pt-6 pb-4 sm:pb-0">
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-200"></div></div>
                         <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-zinc-500">Or continue with</span></div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 mt-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
                         <SocialButton icon={<GoogleIcon />} text="Google" />
                         <SocialButton icon={<AppleIcon />} text="Apple" />
                       </div>
@@ -150,7 +159,7 @@ export default function App() {
                   {/* Shopper Sign Up Fields */}
                   {!isVendor && (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField icon={<User size={20} />} type="text" placeholder="First Name" />
                         <InputField type="text" placeholder="Last Name" />
                       </div>
@@ -169,7 +178,7 @@ export default function App() {
                       <InputField icon={<Store size={20} />} type="text" placeholder="Brand / Store Name" />
                       <InputField icon={<User size={20} />} type="text" placeholder="Contact Person" />
                       <InputField icon={<Mail size={20} />} type="email" placeholder="Business Email" />
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <InputField icon={<Globe size={20} />} type="text" placeholder="Website" />
                          <InputField icon={<InstagramIcon />} type="text" placeholder="@handle" />
                       </div>
@@ -209,7 +218,8 @@ function InputField({ icon, type, placeholder }) {
       <input
         type={type}
         placeholder={placeholder}
-        className={`w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400 ${icon ? 'pl-12' : ''}`}
+        style={{ minHeight: '52px', padding: '14px 16px', paddingLeft: icon ? '48px' : '16px' }}
+        className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
         required
       />
     </div>
@@ -220,7 +230,8 @@ function SubmitButton({ text }) {
   return (
     <button 
       type="submit" 
-      className="w-full bg-zinc-900 text-white rounded-xl py-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-zinc-800 transition-transform active:scale-[0.98] mt-4"
+      style={{ minHeight: '52px', padding: '14px 24px', marginTop: '16px', color: '#ffffff' }}
+      className="w-full bg-zinc-900 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-zinc-800 transition-transform active:scale-[0.98]"
     >
       {text}
       <ArrowRight size={18} />
@@ -232,7 +243,8 @@ function SocialButton({ icon, text }) {
   return (
     <button 
       type="button"
-      className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 rounded-xl py-3 text-sm font-medium hover:bg-zinc-50 transition-colors"
+      style={{ minHeight: '48px', padding: '12px 16px' }}
+      className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-colors"
     >
       {icon}
       {text}
