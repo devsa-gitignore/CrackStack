@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search, SlidersHorizontal, Sparkles, Heart, ArrowUpRight, Star } from 'lucide-react';
+import { Search, SlidersHorizontal, Sparkles, Heart } from 'lucide-react';
 import Masonry from '../components/Masonry';
 import MagicBento from '../components/MagicBento';
 
@@ -25,6 +25,29 @@ const products = [
 ];
 
 const categories = ['All', 'T-Shirt', 'Shirt', 'Jacket', 'Kurta', 'Sherwani', 'Saree', 'Lehenga', 'Watch'];
+
+const priceBands = [
+  {
+    id: 'All',
+    label: 'All prices',
+    predicate: () => true
+  },
+  {
+    id: 'budget',
+    label: 'Up to Rs 3,000',
+    predicate: (value) => value <= 3000
+  },
+  {
+    id: 'mid',
+    label: 'Rs 3,001 - Rs 8,000',
+    predicate: (value) => value > 3000 && value <= 8000
+  },
+  {
+    id: 'premium',
+    label: 'Above Rs 8,000',
+    predicate: (value) => value > 8000
+  }
+];
 
 const bentoCards = [
   {
@@ -68,14 +91,36 @@ const bentoCards = [
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeBadge, setActiveBadge] = useState('All');
+  const [activePriceBand, setActivePriceBand] = useState('All');
+  const [sortBy, setSortBy] = useState('featured');
+
+  const availableBadges = useMemo(() => ['All', ...new Set(products.map((product) => product.badge))], []);
+
+  const parsePrice = (priceText) => Number(priceText.replace(/[^0-9]/g, ''));
 
   const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
+    const baseFiltered = products.filter((product) => {
       const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      const matchesBadge = activeBadge === 'All' || product.badge === activeBadge;
+      const band = priceBands.find((entry) => entry.id === activePriceBand) ?? priceBands[0];
+      const matchesPriceBand = band.predicate(parsePrice(product.price));
+
+      return matchesCategory && matchesSearch && matchesBadge && matchesPriceBand;
     });
-  }, [activeCategory, searchQuery]);
+
+    if (sortBy === 'price-low-high') {
+      return [...baseFiltered].sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+    }
+
+    if (sortBy === 'price-high-low') {
+      return [...baseFiltered].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+    }
+
+    return baseFiltered;
+  }, [activeCategory, searchQuery, activeBadge, activePriceBand, sortBy]);
 
   const masonryItems = useMemo(() => {
     return filteredProducts.map((product) => ({
@@ -93,7 +138,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-28 pt-24 text-zinc-900">
-      <div className="mx-auto max-w-7xl px-5 pb-10 sm:px-6 lg:px-10">
+      <div className="mx-auto w-full max-w-[1800px] px-4 pb-10 sm:px-6 lg:px-8 2xl:px-10">
         <section className="p-2 sm:p-3">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -114,6 +159,7 @@ export default function Home() {
               </div>
               <button
                 type="button"
+                onClick={() => setIsFilterOpen((prev) => !prev)}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 px-4 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:border-zinc-300 hover:bg-zinc-50"
               >
                 <SlidersHorizontal size={16} />
@@ -121,6 +167,105 @@ export default function Home() {
               </button>
             </div>
           </div>
+
+          {isFilterOpen && (
+            <div className="mt-4 rounded-3xl border border-zinc-200 bg-white p-4 sm:p-5">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-zinc-400">Style</p>
+                  <div className="flex flex-wrap gap-2">
+                    {availableBadges.map((badge) => (
+                      <button
+                        key={badge}
+                        type="button"
+                        onClick={() => setActiveBadge(badge)}
+                        className={`rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] transition-all ${
+                          activeBadge === badge
+                            ? 'border-zinc-900 bg-zinc-900 text-white'
+                            : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300 hover:text-zinc-900'
+                        }`}
+                      >
+                        {badge}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-zinc-400">Price Range</p>
+                  <div className="space-y-2">
+                    {priceBands.map((band) => (
+                      <button
+                        key={band.id}
+                        type="button"
+                        onClick={() => setActivePriceBand(band.id)}
+                        className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                          activePriceBand === band.id
+                            ? 'border-zinc-900 bg-zinc-900 text-white'
+                            : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                        }`}
+                      >
+                        {band.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-zinc-400">Sort</p>
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('featured')}
+                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                        sortBy === 'featured'
+                          ? 'border-zinc-900 bg-zinc-900 text-white'
+                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                      }`}
+                    >
+                      Featured
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('price-low-high')}
+                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                        sortBy === 'price-low-high'
+                          ? 'border-zinc-900 bg-zinc-900 text-white'
+                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                      }`}
+                    >
+                      Price: Low to High
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSortBy('price-high-low')}
+                      className={`block w-full rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-colors ${
+                        sortBy === 'price-high-low'
+                          ? 'border-zinc-900 bg-zinc-900 text-white'
+                          : 'border-zinc-200 bg-zinc-50 text-zinc-600 hover:border-zinc-300 hover:text-zinc-900'
+                      }`}
+                    >
+                      Price: High to Low
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveBadge('All');
+                    setActivePriceBand('All');
+                    setSortBy('featured');
+                  }}
+                  className="rounded-full border border-zinc-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
             {categories.map((category) => (
@@ -195,7 +340,7 @@ export default function Home() {
                 </button>
                 <button className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15">
                   Explore Wardrobe
-                  <ArrowUpRight size={16} />
+                  <Sparkles size={16} />
                 </button>
               </div>
             </div>
@@ -214,7 +359,7 @@ export default function Home() {
               <div className="rounded-3xl bg-white/10 p-5 sm:col-span-2">
                 <div className="flex items-start gap-3">
                   <div className="rounded-2xl bg-white/10 p-3">
-                    <Star size={18} />
+                    <Sparkles size={18} />
                   </div>
                   <div>
                     <p className="text-lg font-black tracking-tight">Built to feel like a fashion browse, not a plain product list</p>

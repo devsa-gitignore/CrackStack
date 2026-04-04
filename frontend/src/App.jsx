@@ -31,7 +31,7 @@ function AppDock() {
     {
       icon: <Camera size={20} className="text-white" />,
       label: 'Try On',
-      onClick: () => navigate('/home')
+      onClick: () => navigate('/try-on')
     }
   ]
 
@@ -61,6 +61,7 @@ function AppHeader() {
         </button>
         <button
           type="button"
+          onClick={() => navigate('/try-on')}
           className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-zinc-800"
           title="Start AR Try-On"
         >
