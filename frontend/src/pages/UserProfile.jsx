@@ -1,4 +1,5 @@
-import { Mail, MapPin, Sparkles, Shirt } from 'lucide-react';
+import { Mail, MapPin, Sparkles, Shirt, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const stylePicks = ['Streetwear', 'Traditional', 'Minimal', 'Occasion Wear'];
 
@@ -19,12 +20,20 @@ function UserProfile() {
                   Your signed-in space for personal details, style preferences, and wardrobe shortcuts.
                 </p>
               </div>
-              <button
-                type="button"
-                className="rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-              >
-                Edit Profile
-              </button>
+              <div className="flex gap-3">
+                <Link
+                  to="/vendor"
+                  className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-300"
+                >
+                  <Store size={16}/> Vendor Dashboard
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                >
+                  Edit Profile
+                </button>
+              </div>
             </div>
           </div>
         </section>
