@@ -20,8 +20,8 @@ export default function AISidebar({ garmentType, description, userContext, cloth
 
   // Auto-fetch data when tab changes or garment changes
   useEffect(() => {
-    // If we have neither, then we stay idle
-    if (!description && !garmentType) return;
+    // Discovery mode: even if no garment is selected, we show trending items
+    const isDiscovery = !description && !garmentType && !clothBase64;
     
     // IF we are in the shop tab but have no AI analysis yet, we wait for style first
     if (activeTab === 'shop' && !data.style && clothBase64) {
@@ -38,17 +38,20 @@ export default function AISidebar({ garmentType, description, userContext, cloth
         let endpoint = '';
         let payload = {};
 
-        const garmentId = description || garmentType;
+        const garmentId = description || garmentType || 'Trending Fashion';
+        const isDefault = !description && !garmentType;
 
         if (activeTab === 'shop') {
           endpoint = '/find-similar';
           // Use AI Search Query if available, else fallback
-          payload = { query: data.style?.search_query || garmentId };
+          // If no image, we do a broad "Discovery" search
+          payload = { query: data.style?.search_query || (isDefault ? 'Trending Summer Outfits 2024' : garmentId) };
         } else if (activeTab === 'style') {
           endpoint = '/style-suggest';
           payload = {
             currentCloth: garmentId,
             image: clothBase64,
+            isDiscovery: isDefault,
             styleProfile: { 
               preferredColors: ['neutrals'], 
               clothTypes: ['casual'],
@@ -61,7 +64,8 @@ export default function AISidebar({ garmentType, description, userContext, cloth
           payload = { 
             garmentDescription: garmentId,
             userContext,
-            image: clothBase64
+            image: clothBase64,
+            isDiscovery: isDefault
           };
         }
 
@@ -102,7 +106,13 @@ export default function AISidebar({ garmentType, description, userContext, cloth
             <div className="bg-indigo-500/20 text-indigo-400 p-2 rounded-xl">✨</div>
             <div>
               <h2 className="font-bold text-white tracking-tight">AI Stylist</h2>
-              <p className="text-xs text-gray-400 font-medium">Analyzing: <span className="text-gray-300">{garmentType.toUpperCase()}</span></p>
+              <p className="text-xs text-gray-400 font-medium italic">
+                {!description && !clothBase64 ? (
+                  <span className="text-indigo-400 font-bold animate-pulse">DISCOVERY MODE ACTIVE</span>
+                ) : (
+                  <>Analyzing: <span className="text-gray-300">{(description || garmentType || '').toUpperCase()}</span></>
+                )}
+              </p>
             </div>
           </div>
 

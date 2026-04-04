@@ -92,6 +92,95 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   if (!keypoints || !img || imgW === 0 || imgW === undefined) return;
 
+  // ── ACCESSORY ANCHORING (NEW) ──────────────────────────────────────────
+  if (template.isHead) {
+    if (!keypoints.headTop) return;
+    const headScale = keypoints.eyeDistance * 2.5; 
+    const headAngle = keypoints.angle || 0; 
+    const clothWidth = headScale * template.widthMult;
+    const clothHeight = headScale * template.heightMult;
+    const yOff = headScale * (template.yOffset || 0);
+
+    ctx.save();
+    ctx.translate(keypoints.headTop.x, keypoints.headTop.y + yOff);
+    ctx.rotate(headAngle);
+    ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
+    ctx.restore();
+    return;
+  }
+
+  if (template.isFace) {
+    if (!keypoints.nose) return;
+    const faceScale = keypoints.eyeDistance * 1.5;
+    const faceAngle = keypoints.angle || 0;
+    const clothWidth = faceScale * template.widthMult;
+    const clothHeight = faceScale * template.heightMult;
+    const yOff = faceScale * (template.yOffset || 0);
+
+    ctx.save();
+    ctx.translate(keypoints.nose.x, keypoints.nose.y + yOff);
+    ctx.rotate(faceAngle);
+    ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
+    ctx.restore();
+    return;
+  }
+
+  if (template.isWrist) {
+    // Check both wrists, default to left if both are available
+    const arm = keypoints.arms?.left || keypoints.arms?.right;
+    if (!arm || !arm.wrist || !arm.elbow) return; // CRITICAL FIX: Ensure elbow exists for angle calculation
+    
+    const wrist = arm.wrist;
+    const elbow = arm.elbow;
+    const wristScale = keypoints.shoulderWidth * 0.2;
+    
+    const dx = wrist.x - elbow.x;
+    const dy = wrist.y - elbow.y;
+    const wristAngle = Math.atan2(dy, dx) + Math.PI / 2;
+    
+    const clothWidth = wristScale * template.widthMult;
+    const clothHeight = wristScale * template.heightMult;
+    const yOff = wristScale * (template.yOffset || 0); // Apply vertical offset along the arm axis
+
+    ctx.save();
+    ctx.translate(wrist.x, wrist.y);
+    ctx.rotate(wristAngle);
+    ctx.translate(0, yOff); // Move it slightly up/down the arm
+    ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
+    ctx.restore();
+    return;
+  }
+
+  if (template.isShoes) {
+    const feet = [
+      { ankle: keypoints.leftAnkle, toe: keypoints.leftToe },
+      { ankle: keypoints.rightAnkle, toe: keypoints.rightToe }
+    ];
+
+    feet.forEach(({ ankle, toe }) => {
+      if (!ankle) return;
+      const shoeScale = keypoints.torsoHeight * 0.18;
+      let shoeAngle = keypoints.angle || 0;
+      if (toe) {
+        shoeAngle = Math.atan2(toe.y - ankle.y, toe.x - ankle.x);
+      }
+      
+      const clothWidth = shoeScale * template.widthMult;
+      const clothHeight = shoeScale * template.heightMult;
+      const yOff = shoeScale * (template.yOffset || 0);
+
+      ctx.save();
+      ctx.translate(ankle.x, ankle.y);
+      ctx.rotate(shoeAngle);
+      ctx.translate(0, yOff);
+      ctx.drawImage(img, -clothWidth / 2, -clothHeight / 2, clothWidth, clothHeight);
+      ctx.restore();
+    });
+    return;
+  }
+
+
+  // ── BODY GARMENT LOGIC (EXISTING) ──────────────────────────────────────
   const { shoulderWidth, torsoHeight, anchorX, anchorY, angle, hipMid, hipWidth, legHeight, hipAngle, arms, leftShoulder, rightShoulder, leftHip, rightHip } = keypoints;
 
   let localTemplate = template;

@@ -14,22 +14,29 @@
  */
 
 const LANDMARK = {
+  NOSE: 0,
+  LEFT_EYE: 2,
+  RIGHT_EYE: 5,
+  LEFT_EAR: 7,
+  RIGHT_EAR: 8,
   LEFT_SHOULDER: 11,
   RIGHT_SHOULDER: 12,
   LEFT_ELBOW: 13,
   RIGHT_ELBOW: 14,
+  LEFT_WRIST: 15,
+  RIGHT_WRIST: 16,
   LEFT_HIP: 23,
   RIGHT_HIP: 24,
   LEFT_KNEE: 25,
   RIGHT_KNEE: 26,
   LEFT_ANKLE: 27,
   RIGHT_ANKLE: 28,
-  LEFT_WRIST: 15,
-  RIGHT_WRIST: 16,
+  LEFT_HEEL: 29,
+  RIGHT_HEEL: 30,
+  LEFT_FOOT_INDEX: 31,
+  RIGHT_FOOT_INDEX: 32,
   LEFT_INDEX: 19,
   RIGHT_INDEX: 20,
-  LEFT_EYE: 2,
-  RIGHT_EYE: 5,
 };
 
 /**
@@ -69,79 +76,65 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
   const lh = landmarks[LANDMARK.LEFT_HIP];
   const rh = landmarks[LANDMARK.RIGHT_HIP];
 
-  // Check visibility — MediaPipe gives a visibility score 0-1
+  // Check visibility for all base landmarks
   const minVisibility = options.minVisibility ?? 0.5;
 
-  const visibilities = {
-    leftShoulder: ls.visibility,
-    rightShoulder: rs.visibility,
-    leftHip: lh.visibility,
-    rightHip: rh.visibility,
-  };
+  const leftShoulder = (ls && ls.visibility > minVisibility) ? { x: ls.x * width, y: ls.y * height } : null;
+  const rightShoulder = (rs && rs.visibility > minVisibility) ? { x: rs.x * width, y: rs.y * height } : null;
+  const leftHip = (lh && lh.visibility > minVisibility) ? { x: lh.x * width, y: lh.y * height } : null;
+  const rightHip = (rh && rh.visibility > minVisibility) ? { x: rh.x * width, y: rh.y * height } : null;
 
-  const failing = Object.entries(visibilities).filter(([, v]) => v < minVisibility);
-
-  if (failing.length > 0) {
-    console.warn(
-      `[extractKeypoints] Visibility too low (threshold=${minVisibility}):`,
-      Object.fromEntries(Object.entries(visibilities).map(([k, v]) => [k, v.toFixed(3)])),
-      '| Failing:', failing.map(([k, v]) => `${k}=${v.toFixed(3)}`).join(', ')
-    );
-    return null;
-  }
-
-  // Convert normalized (0-1) coords to pixel space
-  const leftShoulder = { x: ls.x * width, y: ls.y * height };
-  const rightShoulder = { x: rs.x * width, y: rs.y * height };
-  const leftHip = { x: lh.x * width, y: lh.y * height };
-  const rightHip = { x: rh.x * width, y: rh.y * height };
-
-  const shoulderMid = midpoint(leftShoulder, rightShoulder);
-  const hipMid = midpoint(leftHip, rightHip);
-
-  const shoulderWidth = distance(leftShoulder, rightShoulder);
-  const torsoHeight = distance(shoulderMid, hipMid);
-  const hipWidth = distance(leftHip, rightHip);
+  // Derived Torso Metrics
+  const shoulderMid = (leftShoulder && rightShoulder) ? midpoint(leftShoulder, rightShoulder) : null;
+  const hipMid = (leftHip && rightHip) ? midpoint(leftHip, rightHip) : null;
+  const shoulderWidth = (leftShoulder && rightShoulder) ? distance(leftShoulder, rightShoulder) : 100; // default safe scale
+  const torsoHeight = (shoulderMid && hipMid) ? distance(shoulderMid, hipMid) : 200; // default safe scale
+  const hipWidth = (leftHip && rightHip) ? distance(leftHip, rightHip) : 100;
 
   // Eye distance (use for scale)
-  const le = landmarks[LANDMARK.LEFT_EYE];
-  const re = landmarks[LANDMARK.RIGHT_EYE];
-  const eyeDistance = (le && re && le.visibility > minVisibility && re.visibility > minVisibility)
-    ? distance({x: le.x * width, y: le.y * height}, {x: re.x * width, y: re.y * height})
+  const leye = landmarks[LANDMARK.LEFT_EYE];
+  const reye = landmarks[LANDMARK.RIGHT_EYE];
+  const eyeDistance = (leye && reye && leye.visibility > minVisibility && reye.visibility > minVisibility)
+    ? distance({x: leye.x * width, y: leye.y * height}, {x: reye.x * width, y: reye.y * height})
     : 0;
 
-  // Leg data (if visible)
-  let legHeight = torsoHeight * 2; // safe fallback
+  // Leg data
+  const lk = landmarks[LANDMARK.LEFT_KNEE];
+  const rk = landmarks[LANDMARK.RIGHT_KNEE];
   const la = landmarks[LANDMARK.LEFT_ANKLE];
   const ra = landmarks[LANDMARK.RIGHT_ANKLE];
-  if (la && ra && la.visibility > minVisibility && ra.visibility > minVisibility) {
-    const leftAnkle = { x: la.x * width, y: la.y * height };
-    const rightAnkle = { x: ra.x * width, y: ra.y * height };
+
+  const leftKnee = (lk && lk.visibility > minVisibility) ? { x: lk.x * width, y: lk.y * height } : null;
+  const rightKnee = (rk && rk.visibility > minVisibility) ? { x: rk.x * width, y: rk.y * height } : null;
+  const leftAnkle = (la && la.visibility > minVisibility) ? { x: la.x * width, y: la.y * height } : null;
+  const rightAnkle = (ra && ra.visibility > minVisibility) ? { x: ra.x * width, y: ra.y * height } : null;
+
+  const lh_heel = landmarks[LANDMARK.LEFT_HEEL];
+  const rh_heel = landmarks[LANDMARK.RIGHT_HEEL];
+  const lt = landmarks[LANDMARK.LEFT_FOOT_INDEX];
+  const rt = landmarks[LANDMARK.RIGHT_FOOT_INDEX];
+  const leftHeel = (lh_heel && lh_heel.visibility > minVisibility) ? { x: lh_heel.x * width, y: lh_heel.y * height } : null;
+  const rightHeel = (rh_heel && rh_heel.visibility > minVisibility) ? { x: rh_heel.x * width, y: rh_heel.y * height } : null;
+  const leftToe = (lt && lt.visibility > minVisibility) ? { x: lt.x * width, y: lt.y * height } : null;
+  const rightToe = (rt && rt.visibility > minVisibility) ? { x: rt.x * width, y: rt.y * height } : null;
+
+  let legHeight = torsoHeight * 2; // safe fallback
+  if (leftAnkle && rightAnkle) {
     const ankleMid = midpoint(leftAnkle, rightAnkle);
-    legHeight = distance(hipMid, ankleMid);
-  } else {
-    // If ankles are missing, fallback to knees if possible
-    const lk = landmarks[LANDMARK.LEFT_KNEE];
-    const rk = landmarks[LANDMARK.RIGHT_KNEE];
-    if (lk && rk && lk.visibility > minVisibility && rk.visibility > minVisibility) {
-      const leftKnee = { x: lk.x * width, y: lk.y * height };
-      const rightKnee = { x: rk.x * width, y: rk.y * height };
-      const kneeMid = midpoint(leftKnee, rightKnee);
-      legHeight = distance(hipMid, kneeMid) * 2; // Knees are roughly halfway down the leg
-    }
+    legHeight = distance(hipMid || {x:0, y:0}, ankleMid);
+  } else if (leftKnee && rightKnee) {
+    const kneeMid = midpoint(leftKnee, rightKnee);
+    legHeight = distance(hipMid || {x:0, y:0}, kneeMid) * 2;
   }
 
-  // Shoulder tilt angle in radians
-  const angle = Math.atan2(
-    rightShoulder.y - leftShoulder.y,
-    rightShoulder.x - leftShoulder.x
-  );
+  // Tilt angles
+  const angle = (leftShoulder && rightShoulder) 
+    ? Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x) 
+    : 0;
   
-  // Hip tilt angle in radians (for pants)
-  const hipAngle = Math.atan2(
-    rightHip.y - leftHip.y,
-    rightHip.x - leftHip.x
-  );
+  const hipAngle = (leftHip && rightHip)
+    ? Math.atan2(rightHip.y - leftHip.y, rightHip.x - leftHip.x)
+    : 0;
 
   // 3D YAW ROTATION (Facing direction calculation)
   // MediaPipe provides localized Z depth! We can calculate actual 3D body rotation.
@@ -172,6 +165,31 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
     index: getArmNode(LANDMARK.RIGHT_INDEX),
   };
 
+  // Head and Face nodes
+  const noseRef = landmarks[LANDMARK.NOSE];
+  const nose = (noseRef && noseRef.visibility > minVisibility) 
+    ? { x: noseRef.x * width, y: noseRef.y * height, z: noseRef.z } 
+    : null;
+
+  const le = landmarks[LANDMARK.LEFT_EYE];
+  const re = landmarks[LANDMARK.RIGHT_EYE];
+  const leftEye = (le && le.visibility > minVisibility) ? { x: le.x * width, y: le.y * height } : null;
+  const rightEye = (re && re.visibility > minVisibility) ? { x: re.x * width, y: re.y * height } : null;
+
+  const l_ear = landmarks[LANDMARK.LEFT_EAR];
+  const r_ear = landmarks[LANDMARK.RIGHT_EAR];
+  const leftEar = (l_ear && l_ear.visibility > minVisibility) ? { x: l_ear.x * width, y: l_ear.y * height } : null;
+  const rightEar = (r_ear && r_ear.visibility > minVisibility) ? { x: r_ear.x * width, y: r_ear.y * height } : null;
+
+  // Estimate top of head (roughly same distance above eyes as eyes are above nose)
+  let headTop = null;
+  if (nose && leftEye && rightEye) {
+    const eyeMid = midpoint(leftEye, rightEye);
+    const headUpX = eyeMid.x - nose.x;
+    const headUpY = eyeMid.y - nose.y;
+    headTop = { x: eyeMid.x + headUpX * 1.5, y: eyeMid.y + headUpY * 1.5 };
+  }
+
   return {
     leftShoulder,
     rightShoulder,
@@ -192,6 +210,20 @@ export function extractKeypoints(landmarks, width, height, options = {}) {
     anchorX: shoulderMid.x,
     anchorY: shoulderMid.y,
     arms, // EXPORTED ARM NODES!
+    nose,
+    leftEye,
+    rightEye,
+    leftEar,
+    rightEar,
+    headTop,
+    leftKnee,
+    rightKnee,
+    leftAnkle,
+    rightAnkle,
+    leftHeel,
+    rightHeel,
+    leftToe,
+    rightToe,
   };
 }
 
