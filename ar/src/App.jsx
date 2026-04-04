@@ -16,49 +16,7 @@ export default function App() {
 
   // Custom Cloth State management
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
-  const [wardrobe, setWardrobe] = useState([
-    // {
-    //   id: 1,
-    //   image: '/mock-tshirt.png',
-    //   base64Image: null,
-    //   type: 'tshirt',
-    //   description: null,
-    //   targetPins: null,
-    //   isVisible: true,
-    // },
-    {
-      id: 101,
-      image: '/assets/turban.png',
-      base64Image: null,
-      type: 'turban',
-      description: 'Traditional Saffron Turban',
-      isVisible: false,
-    },
-    {
-      id: 102,
-      image: '/assets/watch.png',
-      base64Image: null,
-      type: 'watch',
-      description: 'Luxury Silver Watch',
-      isVisible: false,
-    },
-    {
-      id: 103,
-      image: '/assets/glasses.png',
-      base64Image: null,
-      type: 'glasses',
-      description: 'Classic Wayfarers',
-      isVisible: false,
-    },
-    {
-      id: 104,
-      image: '/assets/shoes.png',
-      base64Image: null,
-      type: 'shoes',
-      description: 'Modern White Sneakers',
-      isVisible: false,
-    }
-  ]);
+  const [wardrobe, setWardrobe] = useState([]);
 
   // Stores user body dimensions, complexion, and reference image
   const [userContext, setUserContext] = useState(null);
@@ -176,7 +134,7 @@ export default function App() {
       {/* Right Side - AI Sidebar with Mobile Toggle */}
       <div className={`fixed lg:relative top-0 right-0 h-full z-40 transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:hidden w-0 overflow-hidden'}`}>
         <AISidebar
-          garmentType={wardrobe.find(g => g.isVisible)?.type || 'tshirt'}
+          garmentType={wardrobe.find(g => g.isVisible)?.type}
           description={wardrobe.find(g => g.isVisible)?.description}
           userContext={userContext}
           clothBase64={wardrobe.find(g => g.isVisible)?.base64Image}
