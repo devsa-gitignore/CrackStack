@@ -7,12 +7,9 @@ import LandingPage from './pages/LandingPage.jsx'
 function App() {
   return (
     <>
-  <Login/>
+    <Login/>
+    <LandingPage/>
     </>
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
   )
 }
 
