@@ -180,7 +180,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
   }
 
 
-  // ── BODY GARMENT LOGIC (EXISTING) ──────────────────────────────────────
+  // ── BODY GARMENT LOGIC ──────────────────────────────────────
   const { shoulderWidth, torsoHeight, anchorX, anchorY, angle, hipMid, hipWidth, legHeight, hipAngle, arms, leftShoulder, rightShoulder, leftHip, rightHip } = keypoints;
 
   let localTemplate = template;
@@ -221,7 +221,7 @@ export function drawWarpedCloth(ctx, img, keypoints, template, clothPins) {
 
   // Force the garment strictly higher (only for tops! bottoms sit rigidly at waist)
   if (!isBottom) {
-    customYOff -= (coreHeight * 0.15);
+    customYOff -= (coreHeight * 0.1);
   } else {
     // Bottoms should map exactly to waist with minor overlap
     customYOff -= (coreHeight * 0.02);

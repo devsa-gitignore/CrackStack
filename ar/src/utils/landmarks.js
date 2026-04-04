@@ -3,14 +3,6 @@
  * 
  * MediaPipe returns normalized coords (0–1). We convert to pixel space
  * and compute the derived values needed for cloth rendering.
- * 
- * Key landmark indices (same in both old and new MediaPipe API):
- *   11 = LEFT_SHOULDER
- *   12 = RIGHT_SHOULDER
- *   23 = LEFT_HIP
- *   24 = RIGHT_HIP
- *   13 = LEFT_ELBOW  (optional, for future sleeve fitting)
- *   14 = RIGHT_ELBOW (optional, for future sleeve fitting)
  */
 
 const LANDMARK = {
