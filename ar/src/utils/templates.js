@@ -12,79 +12,79 @@
 
 export const TEMPLATES = {
   tshirt: {
-    widthMult: 2.1,      // Bounding box includes sleeves across both arms!
-    heightMult: 1.50,
-    topWidthMult: 2.1,   
-    botWidthMult: 1.30,  // Tapers slightly at waist
-    yOffset: -0.18,      // Shift UP significantly so the collar sits tightly on the neck
-    neckCutout: false,   // Masking removed
+    widthMult: 2.8,       // Increased significantly
+    heightMult: 2.05,     // Longer
+    topWidthMult: 2.8,   
+    botWidthMult: 1.85,  
+    yOffset: -0.25,      // Higher up
+    neckCutout: false,
   },
   shirt: {
-    widthMult: 2.1,
-    heightMult: 1.55,
-    topWidthMult: 2.1,
-    botWidthMult: 1.35,
-    yOffset: -0.18,
+    widthMult: 2.85,
+    heightMult: 2.10,
+    topWidthMult: 2.85,
+    botWidthMult: 1.95,
+    yOffset: -0.25,
     neckCutout: false,
     isOpen: false,
   },
   jacket: {
-    widthMult: 2.3,
-    heightMult: 1.65,
-    topWidthMult: 2.3,
-    botWidthMult: 1.45,
-    yOffset: -0.18,
+    widthMult: 3.10,
+    heightMult: 2.25,
+    topWidthMult: 3.10,
+    botWidthMult: 2.1,
+    yOffset: -0.25,
     neckCutout: false,
     isOpen: true, 
   },
   kurta: {
-    widthMult: 2.0,
-    heightMult: 1.90,
-    topWidthMult: 2.0,
-    botWidthMult: 1.30,
-    yOffset: -0.18,
+    widthMult: 2.75,
+    heightMult: 2.50,
+    topWidthMult: 2.75,
+    botWidthMult: 1.85,
+    yOffset: -0.25,
     neckCutout: false,
   },
   sherwani: {
-    widthMult: 2.1,
-    heightMult: 2.10,
-    topWidthMult: 2.1,
-    botWidthMult: 1.40,
-    yOffset: -0.18,
+    widthMult: 2.85,
+    heightMult: 2.75,
+    topWidthMult: 2.85,
+    botWidthMult: 1.95,
+    yOffset: -0.25,
     neckCutout: false,
   },
   saree: {
-    widthMult: 2.0,
-    heightMult: 2.30,
-    topWidthMult: 2.0,
-    botWidthMult: 1.40,
-    yOffset: -0.15,
+    widthMult: 2.65,
+    heightMult: 3.00,
+    topWidthMult: 2.65,
+    botWidthMult: 2.10,
+    yOffset: -0.18,
     neckCutout: false,
     isSaree: true, 
   },
   lehenga_top: {
-    widthMult: 2.0,
-    heightMult: 0.80,
-    topWidthMult: 2.0,
-    botWidthMult: 1.15,
-    yOffset: -0.15,
+    widthMult: 2.65,
+    heightMult: 1.10,
+    topWidthMult: 2.65,
+    botWidthMult: 1.70,
+    yOffset: -0.18,
     neckCutout: false,
     isCrop: true, 
   },
   pants: {
-    widthMult: 2.2, // Hips are wide
-    heightMult: 1.1, // legHeight is already exactly Hip-to-Ankle, so 1.0 is exact. 1.1 adds length.
-    topWidthMult: 2.2,
-    botWidthMult: 2.0, // Pant legs
+    widthMult: 2.9, 
+    heightMult: 1.55, 
+    topWidthMult: 2.9,
+    botWidthMult: 2.6,
     yOffset: -0.05,
     neckCutout: false,
-    isBottom: true, // TRIGGERS NEW LEG MATH!
+    isBottom: true, 
   },
   lehenga_bottom: {
-    widthMult: 3.5, // Lehengas flare out heavily
-    heightMult: 1.15,
-    topWidthMult: 2.0, // Tightly fitted waist
-    botWidthMult: 4.5, // Massive flare at the bottom
+    widthMult: 4.8,
+    heightMult: 1.6,
+    topWidthMult: 2.6,
+    botWidthMult: 6.5, 
     yOffset: -0.05,
     neckCutout: false,
     isBottom: true,

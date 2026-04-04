@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
 import { trimCanvas } from '../utils/imageProcessor';
 
@@ -32,19 +32,88 @@ const getCroppedImg = async (imageSrc, pixelCrop) => {
   );
 
   const trimmedCanvas = trimCanvas(canvas);
-
-  return new Promise((resolve) => {
-    trimmedCanvas.toBlob((blob) => {
-      resolve({
-        url: URL.createObjectURL(blob),
-        base64: trimmedCanvas.toDataURL('image/png')
-      });
-    }, 'image/png');
-  });
+  return {
+    url: trimmedCanvas.toDataURL('image/png'),
+    base64: trimmedCanvas.toDataURL('image/png'),
+    width: trimmedCanvas.width,
+    height: trimmedCanvas.height
+  };
 };
 
-export default function ClothUploader({ onClothChange, onClose }) {
+/**
+ * Freeform Eraser Canvas Component
+ */
+function Eraser({ imageSrc, onConfirm }) {
+  const [isDrawing, setIsDrawing] = useState(false);
+  const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+       const container = containerRef.current;
+       const ratio = Math.min(container.clientWidth / img.width, container.clientHeight / img.height);
+       canvas.width = img.width * ratio;
+       canvas.height = img.height * ratio;
+       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    img.src = imageSrc;
+  }, [imageSrc]);
+
+  const startDraw = (e) => {
+    setIsDrawing(true);
+    draw(e);
+  };
+  const endDraw = () => {
+    setIsDrawing(false);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+  };
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 30;
+    ctx.lineCap = 'round';
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm font-bold text-indigo-300">🖌️ Paint over the parts you want to hide (like faces/hands)</p>
+      <div ref={containerRef} className="w-full relative h-[45vh] bg-black/40 rounded-xl flex items-center justify-center overflow-hidden border-2 border-dashed border-indigo-500/20 cursor-crosshair">
+         <canvas 
+           ref={canvasRef} 
+           onMouseDown={startDraw} 
+           onMouseMove={draw} 
+           onMouseUp={endDraw}
+           onMouseLeave={endDraw}
+         />
+      </div>
+      <button 
+        onClick={() => onConfirm(canvasRef.current.toDataURL('image/png'))}
+        className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-2xl font-black text-white"
+      >
+        LOCK EDITS & REMOVE BACKGROUND
+      </button>
+    </div>
+  );
+}
+
+export default function ClothUploader({ onClothChange, onClose, baseSnapshot, userContext }) {
   const [imageSrc, setImageSrc] = useState(null);
+  const [cleansedImg, setCleansedImg] = useState(null); // The result after Eraser + RmoveBg
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -52,7 +121,7 @@ export default function ClothUploader({ onClothChange, onClose }) {
   const [garmentType, setGarmentType] = useState('tshirt');
 
   // Multi-step uploader state
-  const [step, setStep] = useState('crop'); // 'crop' | 'calibrate'
+  const [step, setStep] = useState('upload'); // 'upload' | 'erase' | 'crop' | 'calibrate'
   const [croppedOutput, setCroppedOutput] = useState(null);
   const [pins, setPins] = useState([]);
   
@@ -76,41 +145,35 @@ export default function ClothUploader({ onClothChange, onClose }) {
   }, []);
 
   const handleProcess = async () => {
-    if (!croppedAreaPixels || !imageSrc) return;
-    
+    if (!croppedAreaPixels || !cleansedImg) return;
     try {
       setProcessing(true);
-      
-      // Get the cropped image blob URL and Base64 string
-      const croppedOutput = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const output = await getCroppedImg(cleansedImg, croppedAreaPixels);
+      setCroppedOutput(output);
+      setStep('calibrate');
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
 
-      // In a real flow with Python: 
-      // 1. We would send this Blob to the Python microservice POST /process
-      // 2. Python removes background and classifies (e.g., returns "jacket")
-      // 3. We use the transparent PNG and the classified type.
-      
-      // Hit the shiny new Node.js /remove-bg API!
+  const handleEraserConfirm = async (erasedBase64) => {
+    try {
+      setProcessing(true);
       const res = await fetch('http://localhost:5000/api/remove-bg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: croppedOutput.base64 })
+        body: JSON.stringify({ imageBase64: erasedBase64 })
       });
 
-      if (!res.ok) {
-        throw new Error("Background removal failed. Did you add REMOVE_BG_API_KEY to your .env?");
-      }
-
+      if (!res.ok) throw new Error("Background removal failed.");
       const data = await res.json();
       
-      setCroppedOutput({
-        url: data.result,
-        base64: data.result
-      });
-      setStep('calibrate');
-      
+      setCleansedImg(data.result);
+      setStep('crop');
     } catch (e) {
-      console.error(e);
-      alert('Error cropping image');
+      alert(e.message);
     } finally {
       setProcessing(false);
     }
@@ -121,20 +184,21 @@ export default function ClothUploader({ onClothChange, onClose }) {
       <div className="bg-gray-900 border border-gray-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col items-center p-6">
         <div className="w-full flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-white">
-            {step === 'crop' ? 'Upload & Crop Garment' : 'Calibrate AR Joints'}
+            {step === 'upload' ? 'Upload Image' : step === 'erase' ? 'Step 1: Clean Model out' : step === 'crop' ? 'Step 2: Crop & Align' : 'Step 3: Calibrate'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white transition cursor-pointer">✕</button>
         </div>
 
-        {step === 'crop' && (
-          <>
-            {!imageSrc ? (
+        {step === 'upload' && (
               <div className="w-full flex-col gap-4">
                 <div className="w-full h-48 border-2 border-dashed border-indigo-700/50 rounded-xl flex flex-col items-center justify-center bg-indigo-900/10 hover:bg-indigo-900/20 transition cursor-pointer relative">
                   <span className="text-5xl mb-3">👕</span>
                   <p className="text-indigo-200 font-medium tracking-wide">Click to upload a photo</p>
                   <p className="text-indigo-400/60 text-xs mt-1">Upload a shirt, jacket, or kurta</p>
-                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={onFileChange} />
+                  <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => {
+                     onFileChange(e);
+                     setStep('erase');
+                  }} />
                 </div>
                 
                 <div className="flex items-center my-4">
@@ -162,12 +226,10 @@ export default function ClothUploader({ onClothChange, onClose }) {
                         });
                         const data = await r.json();
                         if (data.error) throw new Error(data.error);
-                        
-                        // Fake a fetch locally to cross-origin blob
                         const resImg = await fetch(data.imageUrl);
                         const blob = await resImg.blob();
                         setImageSrc(URL.createObjectURL(blob));
-                        
+                        setStep('erase');
                       } catch(err) {
                         alert(err.message || 'Scraping failed');
                       } finally {
@@ -180,34 +242,55 @@ export default function ClothUploader({ onClothChange, onClose }) {
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="w-full relative h-[40vh] min-h-[250px] rounded-xl overflow-hidden bg-black mb-4">
-                <Cropper
-                  image={imageSrc}
-                  crop={crop}
-                  zoom={zoom}
-                  aspect={dynamicAspect}
-                  onMediaLoaded={(mediaSize) => {
-                    // Magically locks the crop box to the exact shape of the original image!
-                    setDynamicAspect(mediaSize.width / mediaSize.height);
-                  }}
-                  onCropChange={setCrop}
-                  onCropComplete={onCropComplete}
-                  onZoomChange={setZoom}
-                />
-              </div>
-            )}
+        )}
 
-            {imageSrc && (
+        {step === 'erase' && imageSrc && (
+           <Eraser 
+             imageSrc={imageSrc} 
+             onConfirm={handleEraserConfirm} 
+           />
+        )}
+
+        {step === 'crop' && cleansedImg && (
+          <>
+            <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black mb-4 group">
+                {/* Reference Ghost Template */}
+                {baseSnapshot && (
+                  <div className="absolute inset-0 z-0 opacity-80 pointer-events-none flex items-center justify-center bg-gray-900">
+                    <img src={baseSnapshot} alt="reference" className="w-full h-full object-contain" />
+                    <div className="absolute top-4 left-4 bg-black/60 border border-white/20 px-3 py-1.5 rounded-lg">
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Your Metrics</p>
+                       <p className="text-sm font-mono text-emerald-400">
+                         {userContext?.dimensions?.shoulderWidth || '--'}W × {userContext?.dimensions?.torsoHeight || '--'}H
+                       </p>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 z-10">
+                  <Cropper
+                    image={cleansedImg}
+                    crop={crop}
+                    zoom={zoom}
+                    aspect={dynamicAspect}
+                    mediaStyle={{ opacity: 0.5 }} // MORE TRANSLUCENT FOR REF
+                    onMediaLoaded={(mediaSize) => {
+                      setDynamicAspect(mediaSize.width / mediaSize.height);
+                    }}
+                    onCropChange={setCrop}
+                    onCropComplete={onCropComplete}
+                    onZoomChange={setZoom}
+                  />
+                </div>
+              </div>
+
               <div className="w-full mt-4 flex items-center gap-4">
                 <span className="text-gray-400 text-sm font-medium">Zoom</span>
                 <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(e.target.value)} className="flex-1 accent-indigo-500" />
               </div>
-            )}
-
-            {imageSrc && (
+              
               <div className="w-full mt-6 flex flex-col gap-2">
-                <span className="text-gray-400 text-sm font-medium">Garment Type (Determines AR Fit)</span>
+                <span className="text-gray-400 text-sm font-medium">Garment Type</span>
                 <div className="flex flex-wrap gap-2">
                   {['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom'].map((type) => (
                     <button key={type} onClick={() => setGarmentType(type)} className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all border ${garmentType === type ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700'}`}>
@@ -215,25 +298,21 @@ export default function ClothUploader({ onClothChange, onClose }) {
                     </button>
                   ))}
                 </div>
-                {garmentType === 'jacket' && <p className="text-xs text-indigo-400 mt-1">★ Jacket: Center chest erased for layered look.</p>}
-                {garmentType === 'saree' && <p className="text-xs text-purple-400 mt-1">★ Saree: Asymmetric drape applied. Opposite shoulder erased.</p>}
-                {garmentType === 'lehenga_top' && <p className="text-xs text-pink-400 mt-1">★ Lehenga: Midriff automatically exposed.</p>}
               </div>
-            )}
 
-            <div className="flex w-full mt-8 gap-4 justify-end">
-              <button onClick={onClose} className="px-6 py-2.5 rounded-xl font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 transition">Cancel</button>
-              <button disabled={!imageSrc || processing} onClick={handleProcess} className="px-6 py-2.5 rounded-xl font-medium text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition flex items-center gap-2">
-                {processing ? <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full block"></span> : null}
-                {processing ? 'Processing...' : 'Next: Calibrate'}
-              </button>
-            </div>
+              <div className="flex w-full mt-8 gap-4 justify-end">
+                <button onClick={() => setStep('erase')} className="px-6 py-2.5 rounded-xl font-medium text-gray-300 bg-gray-800 hover:bg-gray-700 transition">Retouch</button>
+                <button disabled={processing} onClick={handleProcess} className="px-6 py-2.5 rounded-xl font-medium text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition flex items-center gap-2">
+                  {processing ? <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full block"></span> : null}
+                  {processing ? 'Processing...' : 'CONFIRM ALIGNMENT →'}
+                </button>
+              </div>
           </>
         )}
 
         {step === 'calibrate' && croppedOutput && (
           <div className="w-full flex flex-col items-center gap-4">
-            <p className="text-gray-300 text-sm leading-relaxed text-center bg-indigo-900/40 p-3 rounded-xl border border-indigo-500/30">
+            <p className="text-gray-300 text-sm leading-relaxed text-center bg-indigo-900/40 p-3 rounded-xl border border-indigo-500/30 w-full">
               For perfect tracking, tap exactly 4 points on the clothes in this order:<br/>
               <b>
                 {['pants', 'lehenga_bottom'].includes(garmentType)
@@ -243,10 +322,19 @@ export default function ClothUploader({ onClothChange, onClose }) {
               </b>
             </p>
 
-            <div className="relative border-4 border-gray-800 rounded-xl overflow-hidden bg-black/50" style={{ maxWidth: '100%', display: 'inline-block' }}>
+            <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black border-4 border-gray-800">
+              {/* GHOST REFERENCE BEHIND PINS (Sync with window size!) */}
+              {baseSnapshot && (
+                <img 
+                  src={baseSnapshot} 
+                  alt="ghost" 
+                  className="absolute inset-0 w-full h-full object-contain opacity-80 pointer-events-none z-0" 
+                />
+              )}
+              
               <img 
                 src={croppedOutput.url} 
-                className="max-h-80 object-contain cursor-crosshair select-none"
+                className="w-full h-full object-contain cursor-crosshair select-none relative z-10 opacity-50"
                 draggable="false"
                 onClick={(e) => {
                   if (pins.length >= 4) return;
@@ -255,7 +343,7 @@ export default function ClothUploader({ onClothChange, onClose }) {
                 }}
               />
               {pins.map((p, i) => (
-                <div key={i} className="absolute w-5 h-5 bg-red-500 rounded-full border-2 border-white pointer-events-none flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_10px_rgba(239,68,68,0.8)]" style={{ left: `calc(${p.x * 100}% - 10px)`, top: `calc(${p.y * 100}% - 10px)` }}>
+                <div key={i} className="absolute w-6 h-6 bg-red-500 rounded-full border-2 border-white pointer-events-none flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_15px_rgba(239,68,68,1)] z-20" style={{ left: `calc(${p.x * 100}% - 12px)`, top: `calc(${p.y * 100}% - 12px)` }}>
                   {i+1}
                 </div>
               ))}

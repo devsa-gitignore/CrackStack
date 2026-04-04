@@ -1,79 +1,51 @@
 import express from 'express';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 const router = express.Router();
 
+/**
+ * TAVILY POWERED IMAGE SCRAPER
+ * Replaces unreliable Cheerio scraping with Google-tier search capability.
+ */
 router.post('/scrape-image', async (req, res) => {
   const { productUrl } = req.body;
+  
+  if (!productUrl) {
+    return res.status(400).json({ error: 'Please provide a valid retail URL.' });
+  }
+
   try {
-    if (!productUrl || !productUrl.startsWith('http')) {
-      return res.status(400).json({ error: 'A valid http(s) URL is required' });
+    const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+    if (!TAVILY_API_KEY) {
+      throw new Error('Missing TAVILY_API_KEY in .env');
     }
 
-    console.log(`[SCRAPER] Cheerio Fetching: ${productUrl}`);
+    console.log(`[TAVILY] Extracting image from: ${productUrl}`);
 
-    const response = await axios.get(productUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-      },
-      timeout: 10000
+    // High-performance search with image extraction enabled
+    const response = await axios.post('https://api.tavily.com/search', {
+      api_key: TAVILY_API_KEY,
+      query: `product photo/image for ${productUrl}`,
+      max_results: 1,
+      include_images: true,
+      search_depth: 'advanced'
     });
 
-    const $ = cheerio.load(response.data);
-
-    // 1. Check OpenGraph image (og:image)
-    let imageUrl = $('meta[property="og:image"]').attr('content') || 
-                   $('meta[name="og:image"]').attr('content');
-
-    // 2. Check Twitter image (twitter:image)
-    if (!imageUrl) {
-      imageUrl = $('meta[name="twitter:image"]').attr('content') || 
-                 $('meta[property="twitter:image"]').attr('content');
+    const images = response.data.images || [];
+    
+    if (images.length === 0) {
+      // Fallback: If Tavily fails, notify the user to upload manually
+      return res.status(404).json({ 
+        error: 'Tavily could not find a high-quality product image for this link. Retailer protections might be too high. Please upload a screenshot manually.',
+        imageUrl: null
+      });
     }
 
-    // 3. Check for specific high-res product image markers
-    if (!imageUrl) {
-      imageUrl = $('link[rel="image_src"]').attr('href') ||
-                 $('meta[itemprop="image"]').attr('content');
-    }
-
-    // 4. Fallback: Find the first image with "product" or "main" in its name/alt
-    if (!imageUrl) {
-      console.log('[SCRAPER] Primary meta-tags missing, scanning img tags...');
-      const fallbackImg = $('img[src*="product"], img[src*="main"], img[alt*="product"], img[alt*="main"]').first().attr('src');
-      if (fallbackImg) imageUrl = fallbackImg;
-    }
-
-    // 5. Final fallback: just take the first high-res looking image
-    if (!imageUrl) {
-      const firstImg = $('img').filter((i, el) => {
-        const src = $(el).attr('src') || '';
-        return src.includes('https://') && !src.includes('pixel') && !src.includes('icon');
-      }).first().attr('src');
-      imageUrl = firstImg;
-    }
-
-    if (!imageUrl) {
-      console.error(`[SCRAPER] No image found for: ${productUrl}`);
-      return res.status(404).json({ error: 'No product image detected. Please upload manually.' });
-    }
-
-    // Resolve relative URLs to absolute
-    let finalUrl = imageUrl;
-    if (finalUrl.startsWith('//')) {
-      finalUrl = 'https:' + finalUrl;
-    } else if (finalUrl.startsWith('/')) {
-      const urlObj = new URL(productUrl);
-      finalUrl = urlObj.origin + finalUrl;
-    }
-
-    console.log(`[SCRAPER SUCCESS] Extracted: ${finalUrl}`);
-    res.json({ imageUrl: finalUrl });
+    // Success! Return the top-scored image
+    res.json({ imageUrl: images[0] });
 
   } catch (error) {
-    console.error(`[SCRAPER ERROR] ${error.message} (Status: ${error.response?.status || 'N/A'}) - URL: ${productUrl}`);
-    res.status(500).json({ error: 'Failed to access the store URL. It might be blocking automated access.' });
+    console.error(`[TAVILY SCRAPE ERROR] ${error.message}`);
+    res.status(500).json({ error: 'Search-based extraction failed. Check your Tavily credits.' });
   }
 });
 

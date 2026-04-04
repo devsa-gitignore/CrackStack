@@ -13,8 +13,9 @@ import useAREngine from '../hooks/useAREngine';
  *
  * You can completely redesign this component's UI without touching any AR code.
  */
-export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpdate }) {
-  const [showSkeleton, setShowSkeleton] = useState(false);
+export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpdate, onBaseCapture }) {
+  const [showSkeleton, setShowSkeleton] = useState(true); // AI Scan often defaults to skeleton on for coolness
+  const [scanComplete, setScanComplete] = useState(false);
 
   // ── AR hooks (pure logic, zero UI) ──────────────────────────────────────
   const { videoRef, cameraReady, cameraError, cameraStarted, startCamera, stopCamera, startVideoFile, isVideoFile } = useCamera();
@@ -26,7 +27,12 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
     wardrobe,
     useWarp,
     showSkeleton,
-    onUserContextUpdate
+    onUserContextUpdate,
+    onBaseCapture: (dataUrl) => {
+       onBaseCapture(dataUrl);
+       setScanComplete(true);
+       setTimeout(() => setScanComplete(false), 2000);
+    },
   });
 
   // Snapshot functionality
@@ -147,6 +153,19 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
           <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4" />
           <p className="text-white font-medium">{loadingProgress}</p>
           {!cameraReady && <p className="text-gray-400 text-sm mt-1">Waiting for camera...</p>}
+        </div>
+      )}
+
+      {/* Scan Complete Animation Overlay */}
+      {scanComplete && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-emerald-500/10 backdrop-blur-[1px]">
+          <div className="bg-emerald-600/90 text-white px-8 py-4 rounded-3xl font-black text-xl shadow-[0_0_50px_rgba(16,185,129,0.4)] border-2 border-emerald-400 animate-pulse flex items-center gap-4">
+             <span className="text-3xl">⚡</span>
+             <div className="flex flex-col items-start leading-tight">
+                <span>SCAN SUCCESS</span>
+                <span className="text-xs font-bold text-emerald-200 uppercase tracking-[0.2em] mt-1">Body Reference Locked</span>
+             </div>
+          </div>
         </div>
       )}
 
