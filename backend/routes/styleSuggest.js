@@ -8,12 +8,14 @@ router.post('/style-suggest', async (req, res) => {
     const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
     // AI FALLBACK: Return mock data if missing API Key
-    if (!GROQ_API_KEY) {
+    if (!GROQ_API_KEY || GROQ_API_KEY === 'mock') {
       console.log('[styleSuggest] Using Mock Results (No Groq Key)');
       return res.json({
-        outfit_pairings: ["Pair with light wash denim jeans and white sneakers", "Layer under a tan bomber jacket for evenings"],
-        occasion: "Casual outings and weekend brunches",
-        style_tip: "Roll the sleeves up slightly for a more relaxed, fitted look."
+        outfit_pairings: [`Pair your ${currentCloth || 'garment'} with light wash denim jeans and white sneakers`, `Layer your ${currentCloth || 'garment'} under a tan bomber jacket for evenings`],
+        occasion: `Perfect for casual outings, ${targetOccasion || 'weekend brunches'}, and everyday style.`,
+        style_tip: `Since you're wearing a ${currentCloth || 'classic piece'}, roll the sleeves up slightly for a more relaxed, fitted look.`,
+        search_query: `Trending ${currentCloth || 'fashion'} 2024`,
+        trends: ["Minimalist Chic", "Streetwear Essentials"]
       });
     }
 
@@ -25,7 +27,8 @@ router.post('/style-suggest', async (req, res) => {
       : 'Provide the best occasions to wear this.';
 
     const prompt = `You are an expert personal stylist AI.
-I am providing a photo of the exact garment the user is wearing. Pay deep attention to its physical texture, patterns, and precise color.
+I am providing a photo of the exact garment the user is wearing, identified as a: "${currentCloth || 'custom garment'}". 
+Pay deep attention to its physical texture, patterns, and precise color from the image.
 
 The user's established style profile based on session history is:
 ${JSON.stringify(styleProfile || {}, null, 2)}
