@@ -5,30 +5,58 @@ import { trimCanvas } from '../utils/imageProcessor';
 /**
  * Utility to extract the cropped portion of the image.
  */
-const getCroppedImg = async (imageSrc, pixelCrop) => {
-  const image = await new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = (e) => reject(e);
-    img.src = imageSrc;
+const createImage = (url) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
   });
-  
+
+function getRadianAngle(degreeValue) {
+  return (degreeValue * Math.PI) / 180;
+}
+
+/**
+ * Utility to extract the cropped portion of the rotated image.
+ */
+const getCroppedImg = async (imageSrc, pixelCrop, rotation = 0) => {
+  const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
+  const maxSize = Math.max(image.width, image.height);
+  const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+  // set each dimensions to double largest dimension to allow for a safe area for the
+  // image to rotate in without being clipped by canvas boundaries
+  canvas.width = safeArea;
+  canvas.height = safeArea;
+
+  // translate canvas context to a central point on canvas to allow image rotation around the center.
+  ctx.translate(safeArea / 2, safeArea / 2);
+  ctx.rotate(getRadianAngle(rotation));
+  ctx.translate(-safeArea / 2, -safeArea / 2);
+
+  // draw rotated image and store data.
+  ctx.drawImage(
+    image,
+    safeArea / 2 - image.width * 0.5,
+    safeArea / 2 - image.height * 0.5
+  );
+
+  const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+  // set canvas width to final desired crop size - this will clear existing context
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
 
-  ctx.drawImage(
-    image,
-    pixelCrop.x,
-    pixelCrop.y,
-    pixelCrop.width,
-    pixelCrop.height,
-    0,
-    0,
-    pixelCrop.width,
-    pixelCrop.height
+  // paste image data with correct offsets for pizel crop
+  ctx.putImageData(
+    data,
+    Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
+    Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
   );
 
   const trimmedCanvas = trimCanvas(canvas);
@@ -116,6 +144,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
   const [cleansedImg, setCleansedImg] = useState(null); // The result after Eraser + RmoveBg
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [garmentType, setGarmentType] = useState('tshirt');
@@ -148,7 +177,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
     if (!croppedAreaPixels || !cleansedImg) return;
     try {
       setProcessing(true);
-      const output = await getCroppedImg(cleansedImg, croppedAreaPixels);
+      const output = await getCroppedImg(cleansedImg, croppedAreaPixels, rotation);
       setCroppedOutput(output);
       setStep('calibrate');
     } catch (e) {
@@ -167,7 +196,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
         body: JSON.stringify({ imageBase64: erasedBase64 })
       });
 
-      if (!res.ok) throw new Error("Background removal failed.");
+      if (!res.ok) throw new Error("Background removal unable.");
       const data = await res.json();
       
       setCleansedImg(data.result);
@@ -231,7 +260,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
                         setImageSrc(URL.createObjectURL(blob));
                         setStep('erase');
                       } catch(err) {
-                        alert(err.message || 'Scraping failed');
+                        alert(err.message || 'Scraping unable');
                       } finally {
                         setScraping(false);
                       }
@@ -271,29 +300,43 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
                   <Cropper
                     image={cleansedImg}
                     crop={crop}
+                    rotation={rotation}
                     zoom={zoom}
+                    minZoom={0.2}
+                    restrictPosition={false}
                     aspect={dynamicAspect}
                     mediaStyle={{ opacity: 0.5 }} // MORE TRANSLUCENT FOR REF
                     onMediaLoaded={(mediaSize) => {
                       setDynamicAspect(mediaSize.width / mediaSize.height);
                     }}
                     onCropChange={setCrop}
+                    onRotationChange={setRotation}
                     onCropComplete={onCropComplete}
                     onZoomChange={setZoom}
                   />
                 </div>
               </div>
 
-              <div className="w-full mt-4 flex items-center gap-4">
-                <span className="text-gray-400 text-sm font-medium">Zoom</span>
-                <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(e.target.value)} className="flex-1 accent-indigo-500" />
+              <div className="w-full mt-4 flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400 text-[10px] uppercase font-bold tracking-widest w-12">Zoom</span>
+                  <input type="range" value={zoom} min={0.2} max={3} step={0.01} onChange={(e) => setZoom(parseFloat(e.target.value))} className="flex-1 accent-indigo-500" />
+                  <span className="text-gray-500 text-[10px] font-mono">{parseFloat(zoom).toFixed(2)}x</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400 text-[10px] uppercase font-bold tracking-widest w-12">Rotate</span>
+                  <button onClick={() => setRotation(r => r - 90)} className="p-1 px-2.5 bg-gray-800 rounded border border-gray-700 text-xs text-gray-300 hover:text-white transition">↺ -90</button>
+                  <input type="range" value={rotation} min={-180} max={180} step={1} onChange={(e) => setRotation(e.target.value)} className="flex-1 accent-purple-500" />
+                  <button onClick={() => setRotation(r => r + 90)} className="p-1 px-2.5 bg-gray-800 rounded border border-gray-700 text-xs text-gray-300 hover:text-white transition">↻ +90</button>
+                  <span className="text-gray-500 text-[10px] font-mono min-w-[32px]">{rotation}°</span>
+                </div>
               </div>
               
               <div className="w-full mt-6 flex flex-col gap-2">
                 <span className="text-gray-400 text-sm font-medium">Garment Type</span>
                 <div className="flex flex-wrap gap-2">
-                  {['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom'].map((type) => (
-                    <button key={type} onClick={() => setGarmentType(type)} className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-all border ${garmentType === type ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700'}`}>
+                  {['tshirt', 'shirt', 'jacket', 'kurta', 'sherwani', 'saree', 'lehenga_top', 'pants', 'lehenga_bottom', 'turban', 'glasses', 'watch', 'shoes'].map((type) => (
+                    <button key={type} onClick={() => setGarmentType(type)} className={`flex-1 py-1.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-tight transition-all border ${garmentType === type ? 'bg-indigo-600/20 border-indigo-500 text-indigo-300' : 'bg-gray-800/50 border-gray-700 text-gray-500 hover:bg-gray-700'}`}>
                       {type.replace('_', ' ')}
                     </button>
                   ))}
@@ -313,13 +356,17 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
         {step === 'calibrate' && croppedOutput && (
           <div className="w-full flex flex-col items-center gap-4">
             <p className="text-gray-300 text-sm leading-relaxed text-center bg-indigo-900/40 p-3 rounded-xl border border-indigo-500/30 w-full">
-              For perfect tracking, tap exactly 4 points on the clothes in this order:<br/>
-              <b>
-                {['pants', 'lehenga_bottom'].includes(garmentType)
-                  ? '1. Left Waist → 2. Right Waist → 3. Left Hem → 4. Right Hem'
-                  : '1. Left Shoulder → 2. Right Shoulder → 3. Left Waist → 4. Right Waist'
-                }
-              </b>
+              {['turban', 'glasses', 'watch', 'shoes'].includes(garmentType) 
+                ? `Ready to Apply? Accessories use automatic tracking. You can skip pins or just tap anywhere 4 times.`
+                : <>For perfect tracking, tap exactly 4 points on the clothes in this order:<br/>
+                   <b>
+                     {['pants', 'lehenga_bottom'].includes(garmentType)
+                       ? '1. Left Waist → 2. Right Waist → 3. Left Hem → 4. Right Hem'
+                       : '1. Left Shoulder → 2. Right Shoulder → 3. Left Waist → 4. Right Waist'
+                     }
+                   </b>
+                  </>
+              }
             </p>
 
             <div className="w-full relative h-[45vh] min-h-[300px] rounded-xl overflow-hidden bg-black border-4 border-gray-800">
@@ -359,7 +406,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
               <button onClick={() => {
                 onClothChange({ image: croppedOutput.url, base64Image: croppedOutput.base64, type: garmentType, targetPins: pins, description: `Uploaded ${garmentType}` });
                 onClose();
-              }} disabled={pins.length < 4} className="px-6 py-2.5 rounded-xl font-medium text-white bg-green-600 hover:bg-green-500 disabled:opacity-50 transition drop-shadow-md">Apply to AR!</button>
+              }} disabled={pins.length < 4 && !['turban', 'glasses', 'watch', 'shoes'].includes(garmentType)} className="px-6 py-2.5 rounded-xl font-medium text-white bg-green-600 hover:bg-green-500 disabled:opacity-50 transition drop-shadow-md">Apply to AR!</button>
             </div>
           </div>
         )}

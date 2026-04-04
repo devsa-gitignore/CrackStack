@@ -1,8 +1,0 @@
-fastapi==0.115.12
-uvicorn==0.34.2
-python-multipart==0.0.20
-rembg[cpu]>=2.0.62
-Pillow==11.2.1
-transformers==4.51.3
-torch==2.6.0
-open-clip-torch==2.29.0

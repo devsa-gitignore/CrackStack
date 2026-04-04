@@ -3,6 +3,41 @@ import { calculateRealMeasurements, recommendSize, getFitAnalysis } from '../uti
 
 const API_BASE = 'http://localhost:5000/api';
 
+/**
+ * Heuristics to derive AI style preferences from a text occasion string.
+ */
+function deriveStyleProfile(occasion = '', userContext = null) {
+  const occ = occasion.toLowerCase();
+  
+  // Defaults
+  let colors = ['neutrals'];
+  let types = ['casual'];
+  
+  if (occ.includes('party') || occ.includes('club')) {
+    colors = ['vibrant', 'black', 'metallics'];
+    types = ['party wear', 'modern'];
+  } else if (occ.includes('wedding') || occ.includes('marriage') || occ.includes('festive') || occ.includes('diwali')) {
+    colors = ['traditional red', 'gold', 'royal blue', 'emeralds'];
+    types = ['ethnic', 'formal traditional'];
+  } else if (occ.includes('interview') || occ.includes('office') || occ.includes('meeting') || occ.includes('corporate')) {
+    colors = ['navy', 'charcoal', 'off-white'];
+    types = ['business formal', 'smart casual'];
+  } else if (occ.includes('date') || occ.includes('brunch')) {
+    colors = ['pastels', 'earthy tones'];
+    types = ['smart casual', 'chic'];
+  } else if (occ.includes('gym') || occ.includes('workout') || occ.includes('outdoor')) {
+    colors = ['neon', 'dark grays', 'blacks'];
+    types = ['activewear', 'breathable'];
+  }
+
+  return {
+    preferredColors: colors,
+    clothTypes: types,
+    complexion: userContext?.complexion || 'unknown',
+    bodyProportions: userContext?.dimensions || 'unknown'
+  };
+}
+
 export default function AISidebar({ garmentType, description, userContext, clothBase64 }) {
   const [activeTab, setActiveTab] = useState('shop');
   const [data, setData] = useState({ shop: null, style: null, trend: null });
@@ -20,9 +55,6 @@ export default function AISidebar({ garmentType, description, userContext, cloth
 
   // Auto-fetch data when tab changes or garment changes
   useEffect(() => {
-    // If we have neither, then we stay idle
-    if (!description && !garmentType) return;
-    
     // IF we are in the shop tab but have no AI analysis yet, we wait for style first
     if (activeTab === 'shop' && !data.style && clothBase64) {
        setActiveTab('style'); // Switch to style first for analysis!
@@ -38,30 +70,31 @@ export default function AISidebar({ garmentType, description, userContext, cloth
         let endpoint = '';
         let payload = {};
 
-        const garmentId = description || garmentType;
+        const garmentId = description || garmentType || 'Trending Fashion';
+        const isDefault = !description && !garmentType;
 
         if (activeTab === 'shop') {
           endpoint = '/find-similar';
           // Use AI Search Query if available, else fallback
-          payload = { query: data.style?.search_query || garmentId };
+          // If no image, we do a broad "Discovery" search
+          payload = { query: data.style?.search_query || (isDefault ? 'Trending Summer Outfits 2024' : garmentId) };
         } else if (activeTab === 'style') {
           endpoint = '/style-suggest';
           payload = {
             currentCloth: garmentId,
             image: clothBase64,
-            styleProfile: { 
-              preferredColors: ['neutrals'], 
-              clothTypes: ['casual'],
-              complexion: userContext?.complexion || 'unknown',
-              bodyProportions: userContext?.dimensions || 'unknown'
-            }
+            isDiscovery: isDefault,
+            isDiscovery: isDefault,
+            targetOccasion, // Include if user typed something
+            styleProfile: deriveStyleProfile(targetOccasion, userContext)
           };
         } else if (activeTab === 'trend') {
           endpoint = '/trend-analysis';
           payload = { 
             garmentDescription: garmentId,
             userContext,
-            image: clothBase64
+            image: clothBase64,
+            isDiscovery: isDefault
           };
         }
 
@@ -102,7 +135,13 @@ export default function AISidebar({ garmentType, description, userContext, cloth
             <div className="bg-indigo-500/20 text-indigo-400 p-2 rounded-xl">✨</div>
             <div>
               <h2 className="font-bold text-white tracking-tight">AI Stylist</h2>
-              <p className="text-xs text-gray-400 font-medium">Analyzing: <span className="text-gray-300">{garmentType.toUpperCase()}</span></p>
+              <p className="text-xs text-gray-400 font-medium italic">
+                {!description && !clothBase64 ? (
+                  <span className="text-indigo-400 font-bold animate-pulse">DISCOVERY MODE ACTIVE</span>
+                ) : (
+                  <>Analyzing: <span className="text-gray-300">{(description || garmentType || '').toUpperCase()}</span></>
+                )}
+              </p>
             </div>
           </div>
 
@@ -183,13 +222,25 @@ export default function AISidebar({ garmentType, description, userContext, cloth
                 href={item.url}
                 target="_blank"
                 rel="noreferrer"
-                className="block p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition group"
+                className="block p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition group overflow-hidden"
               >
-                <h4 className="font-medium text-white group-hover:text-indigo-300 transition line-clamp-1">{item.title}</h4>
-                <p className="text-sm text-gray-400 mt-1 line-clamp-2">{item.content}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-md">Try Buy</span>
-                  <span className="text-xs text-gray-500">{(item.score * 100).toFixed(0)}% Match</span>
+                <div className="flex gap-4">
+                  {item.image && (
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-16 h-16 object-cover rounded-lg border border-white/10 group-hover:border-indigo-500/50 transition shadow-sm" 
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-white group-hover:text-indigo-300 transition line-clamp-1 text-sm">{item.title}</h4>
+                    <p className="text-[11px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{item.content}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
+                  <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider">View Product</span>
+                  <span className="text-[10px] text-gray-500 font-mono">{(item.score * 100).toFixed(0)}% Match</span>
                 </div>
               </a>
             ))}
@@ -221,10 +272,7 @@ export default function AISidebar({ garmentType, description, userContext, cloth
                         currentCloth: description || garmentType,
                         image: clothBase64,
                         targetOccasion,
-                        styleProfile: { 
-                          complexion: userContext?.complexion || 'unknown',
-                          bodyProportions: userContext?.dimensions || 'unknown'
-                        }
+                        styleProfile: deriveStyleProfile(targetOccasion, userContext)
                       })
                     });
                     const result = await res.json();

@@ -46,7 +46,7 @@ export default function useAREngine({
             const trimmedCanvas = await loadAndTrimImage(garment.image);
             wardrobeCacheRef.current[garment.id] = trimmedCanvas;
           } catch (err) {
-            console.error('Failed to load wardrobe item:', garment.image);
+            console.error('Unable to load wardrobe item:', garment.image);
           }
         };
         fetchImg();
@@ -58,60 +58,90 @@ export default function useAREngine({
   const drawDebugSkeleton = useCallback((ctx, keypoints) => {
     if (!keypoints) return;
 
-    const { leftShoulder, rightShoulder, leftHip, rightHip, shoulderMid, hipMid } = keypoints;
+    const { 
+      leftShoulder, rightShoulder, leftHip, rightHip, shoulderMid, hipMid,
+      arms, nose, leftEye, rightEye, leftEar, rightEar, headTop,
+      leftKnee, rightKnee, leftAnkle, rightAnkle 
+    } = keypoints;
 
-    // Shoulder line
-    ctx.strokeStyle = '#00ff88';
     ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(leftShoulder.x, leftShoulder.y);
-    ctx.lineTo(rightShoulder.x, rightShoulder.y);
-    ctx.stroke();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    // Hip line
-    ctx.strokeStyle = '#ff6644';
-    ctx.beginPath();
-    ctx.moveTo(leftHip.x, leftHip.y);
-    ctx.lineTo(rightHip.x, rightHip.y);
-    ctx.stroke();
+    // 1. Draw connections (Lines)
+    const drawLine = (p1, p2, color, dashed = false) => {
+      if (!p1 || !p2) return;
+      ctx.strokeStyle = color;
+      if (dashed) ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+      if (dashed) ctx.setLineDash([]);
+    };
 
-    // Torso center line
-    ctx.strokeStyle = '#4488ff';
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(shoulderMid.x, shoulderMid.y);
-    ctx.lineTo(hipMid.x, hipMid.y);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    // Main Torso
+    drawLine(leftShoulder, rightShoulder, '#00ff88');
+    drawLine(leftHip, rightHip, '#ff6644');
+    drawLine(leftShoulder, leftHip, '#00ff88');
+    drawLine(rightShoulder, rightHip, '#00ff88');
+    drawLine(shoulderMid, hipMid, '#4488ff', true);
 
-    // Landmark dots
-    const points = [
-      { point: leftShoulder, color: '#00ff88', label: 'LS' },
-      { point: rightShoulder, color: '#00ff88', label: 'RS' },
-      { point: leftHip, color: '#ff6644', label: 'LH' },
-      { point: rightHip, color: '#ff6644', label: 'RH' },
-    ];
+    // Face/Head
+    if (nose) {
+      drawLine(nose, leftEye, '#ffffff80');
+      drawLine(nose, rightEye, '#ffffff80');
+      drawLine(leftEye, leftEar, '#ffffff80');
+      drawLine(rightEye, rightEar, '#ffffff80');
+      drawLine(shoulderMid, nose, '#4488ff80', true);
+    }
 
-    points.forEach(({ point, color, label }) => {
+    // Arms
+    if (arms.left?.elbow) {
+      drawLine(leftShoulder, arms.left.elbow, '#00ff88');
+      drawLine(arms.left.elbow, arms.left.wrist, '#00ff88');
+    }
+    if (arms.right?.elbow) {
+      drawLine(rightShoulder, arms.right.elbow, '#00ff88');
+      drawLine(arms.right.elbow, arms.right.wrist, '#00ff88');
+    }
+
+    // Legs
+    if (leftKnee) drawLine(leftHip, leftKnee, '#ff6644');
+    if (leftAnkle) drawLine(leftKnee, leftAnkle, '#ff6644');
+    if (rightKnee) drawLine(rightHip, rightKnee, '#ff6644');
+    if (rightAnkle) drawLine(rightKnee, rightAnkle, '#ff6644');
+
+    // 2. Draw dots
+    const drawDot = (point, color, size = 6) => {
+      if (!point) return;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+      ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
       ctx.fill();
+    };
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 11px monospace';
-      ctx.fillText(label, point.x + 12, point.y + 4);
-    });
+    const points = [
+      { p: leftShoulder, c: '#00ff88' }, { p: rightShoulder, c: '#00ff88' },
+      { p: leftHip, c: '#ff6644' }, { p: rightHip, c: '#ff6644' },
+      { p: nose, c: '#ffffff' }, { p: headTop, c: '#indigo-400' },
+      { p: arms.left?.wrist, c: '#00ff88' }, { p: arms.right?.wrist, c: '#00ff88' },
+      { p: leftAnkle, c: '#ff6644' }, { p: rightAnkle, c: '#ff6644' },
+    ];
+
+    points.forEach(({ p, c }) => drawDot(p, c));
 
     // Metrics overlay
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(8, 8, 260, 80);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(8, 8, 220, 95);
     ctx.fillStyle = '#00ff88';
-    ctx.font = '13px monospace';
-    ctx.fillText(`Shoulder W: ${keypoints.shoulderWidth.toFixed(1)}px`, 16, 28);
-    ctx.fillText(`Torso H: ${keypoints.torsoHeight.toFixed(1)}px`, 16, 46);
-    ctx.fillText(`Angle: ${(keypoints.angle * 180 / Math.PI).toFixed(1)}°`, 16, 64);
-    ctx.fillText(`Anchor: (${keypoints.anchorX.toFixed(0)}, ${keypoints.anchorY.toFixed(0)})`, 16, 82);
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(`BODY METRICS LOCKED`, 16, 28);
+    ctx.font = '11px monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`Shoulders: ${keypoints.shoulderWidth.toFixed(0)}px`, 16, 48);
+    ctx.fillText(`Torso H:   ${keypoints.torsoHeight.toFixed(0)}px`, 16, 64);
+    ctx.fillText(`Leg H:     ${keypoints.legHeight.toFixed(0)}px`, 16, 80);
   }, []);
 
   // ── Main render loop ────────────────────────────────────────────────────
@@ -206,12 +236,30 @@ export default function useAREngine({
             return 0;
           });
 
+          // ── CATEGORY VISIBILITY FILTER ──────────────────
+          const isCategoryAvailable = (cat, k) => {
+            switch (cat) {
+              case 'over-head': return !!k.headTop;
+              case 'face':      return !!k.nose && (!!k.leftEye || !!k.rightEye);
+              case 'torso':     return !!k.leftShoulder && !!k.rightShoulder;
+              case 'wrists':    return (!!k.arms?.left?.wrist && !!k.arms?.left?.elbow) || (!!k.arms?.right?.wrist && !!k.arms?.right?.elbow);
+              case 'legs':      return !!k.leftHip && !!k.rightHip && (!!k.leftAnkle || !!k.leftKnee);
+              case 'feet':      return !!k.leftAnkle || !!k.rightAnkle;
+              case 'full-body': return !!k.leftShoulder && !!k.rightShoulder && !!k.leftHip && !!k.rightHip;
+              default: return true;
+            }
+          };
+
           sortedWardrobe.forEach((garment) => {
             if (!garment.isVisible) return;
             const clothImg = wardrobeCacheRef.current[garment.id];
             
             if (clothImg) {
               const tmpl = TEMPLATES[garment.type] || TEMPLATES.tshirt;
+              
+              // Only draw if the specific body region is visible in the frame
+              if (!isCategoryAvailable(tmpl.category, keypoints)) return;
+
               if (useWarp) {
                 drawWarpedCloth(ctx, clothImg, keypoints, tmpl, garment.targetPins);
               } else {

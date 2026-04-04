@@ -29,9 +29,9 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
     showSkeleton,
     onUserContextUpdate,
     onBaseCapture: (dataUrl) => {
-       onBaseCapture(dataUrl);
-       setScanComplete(true);
-       setTimeout(() => setScanComplete(false), 2000);
+      onBaseCapture(dataUrl);
+      setScanComplete(true);
+      setTimeout(() => setScanComplete(false), 2000);
     },
   });
 
@@ -106,13 +106,14 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
             </span>
           </button>
 
-          <div className="flex items-center my-6 w-full max-w-sm">
+          {/* <div className="flex items-center my-6 w-full max-w-sm">
             <div className="flex-1 h-px bg-gray-800"></div>
             <span className="px-3 text-[10px] font-black uppercase text-gray-500 tracking-widest">OR USE VIDEO FILE</span>
             <div className="flex-1 h-px bg-gray-800"></div>
-          </div>
+          </div> */}
 
-          <label className="cursor-pointer group relative px-8 py-3 bg-gray-900 border border-gray-800 hover:border-indigo-500/50 hover:bg-gray-800 text-gray-400 hover:text-gray-200 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
+          {/*Video File and AR applying is in future scope*/}
+          {/* <label className="cursor-pointer group relative px-8 py-3 bg-gray-900 border border-gray-800 hover:border-indigo-500/50 hover:bg-gray-800 text-gray-400 hover:text-gray-200 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
             <span>📁 Upload MP4 / MOV Video</span>
             <input 
               type="file" 
@@ -122,11 +123,11 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
                 if (e.target.files?.[0]) startVideoFile(e.target.files[0]);
               }} 
             />
-          </label>
+          </label> */}
 
-          <p className="text-gray-600 text-[10px] mt-6 italic">
+          {/* <p className="text-gray-600 text-[10px] mt-6 italic">
             Videos should be recorded from a straight-on perspective for best results.
-          </p>
+          </p> */}
         </div>
       </div>
     );
@@ -137,11 +138,11 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
     <div className="relative w-full h-full bg-black">
       {/* Hidden video element — data source only */}
       <video ref={videoRef} className="hidden" playsInline muted loop={isVideoFile} />
-      
+
       <div className="absolute bottom-4 right-4 z-20 flex gap-2">
-         <button onClick={stopCamera} className="bg-red-600/20 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600/30 transition">
-           Exit AR
-         </button>
+        <button onClick={stopCamera} className="bg-red-600/20 border border-red-500/30 text-red-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600/30 transition">
+          Exit AR
+        </button>
       </div>
 
       {/* Main canvas — the only visible element */}
@@ -160,11 +161,11 @@ export default function ARView({ wardrobe = [], useWarp = true, onUserContextUpd
       {scanComplete && (
         <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none bg-emerald-500/10 backdrop-blur-[1px]">
           <div className="bg-emerald-600/90 text-white px-8 py-4 rounded-3xl font-black text-xl shadow-[0_0_50px_rgba(16,185,129,0.4)] border-2 border-emerald-400 animate-pulse flex items-center gap-4">
-             <span className="text-3xl">⚡</span>
-             <div className="flex flex-col items-start leading-tight">
-                <span>SCAN SUCCESS</span>
-                <span className="text-xs font-bold text-emerald-200 uppercase tracking-[0.2em] mt-1">Body Reference Locked</span>
-             </div>
+            <span className="text-3xl">⚡</span>
+            <div className="flex flex-col items-start leading-tight">
+              <span>SCAN SUCCESS</span>
+              <span className="text-xs font-bold text-emerald-200 uppercase tracking-[0.2em] mt-1">Body Reference Locked</span>
+            </div>
           </div>
         </div>
       )}
