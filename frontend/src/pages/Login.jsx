@@ -1,38 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Mail, Lock, User, ShoppingBag, Store, 
-  ArrowRight, Globe 
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Mail, Lock, User, ShoppingBag, Store,
+  ArrowRight, Globe
 } from 'lucide-react';
 
 export default function App() {
   const [isVendor, setIsVendor] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
 
-  // High-quality Unsplash images for the left panel
   const shopperImg = "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200";
   const vendorImg = "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=1200";
 
+  const handleAuthSubmit = (e) => {
+    e.preventDefault();
+    navigate('/home');
+  };
+
   return (
     <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-y-auto lg:overflow-hidden">
-      
-      {/* LEFT PANEL - DYNAMIC VISUAL CANVAS */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-zinc-900">
-        {/* Shopper Image */}
-        <div 
+        <div
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isVendor ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
           style={{ backgroundImage: `url(${shopperImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
-        
-        {/* Vendor Image */}
-        <div 
+
+        <div
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isVendor ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
           style={{ backgroundImage: `url(${vendorImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
         />
-        
-        {/* Gradient Overlay */}
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        {/* Dynamic Text */}
         <div className="absolute bottom-16 left-16 right-16 text-white">
           <div className="overflow-hidden mb-4">
             <h2 className={`text-4xl md:text-5xl font-bold tracking-tight transition-transform duration-700 ${isVendor ? '-translate-y-full absolute opacity-0' : 'translate-y-0 opacity-100'}`}>
@@ -43,35 +43,31 @@ export default function App() {
             </h2>
           </div>
           <p className="text-zinc-300 text-lg max-w-md">
-            {isVendor 
-              ? "Join the premier destination for independent designers and streetwear labels." 
+            {isVendor
+              ? "Join the premier destination for independent designers and streetwear labels."
               : "Shop exclusive collections from the world's best emerging and established brands."}
           </p>
         </div>
       </div>
 
-      {/* RIGHT PANEL - AUTHENTICATION ENGINE */}
       <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen lg:h-screen lg:overflow-y-auto">
         <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 md:p-24 min-h-max">
-          
-          {/* Logo */}
           <div className="mb-12 text-center w-full max-w-sm">
             <h1 className="text-4xl font-extrabold tracking-tighter">outfyt<span className="text-zinc-400">.</span></h1>
           </div>
 
-          {/* Master Switch (Shopper vs Vendor) */}
-          <div className="flex bg-zinc-100 rounded-full relative w-full max-w-sm" style={{ padding: '4px', marginBottom: '2.5rem', boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)' }}>
-            <div 
+          <div className="flex bg-zinc-100 p-1 rounded-full mb-10 relative w-full max-w-sm shadow-inner">
+            <div
               className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-full shadow-sm transition-all duration-300 ease-out z-0
-                ${isVendor ? 'left-[calc(50%+2px)]' : 'left-1'}`} 
+                ${isVendor ? 'left-[calc(50%+2px)]' : 'left-1'}`}
             />
-            <button 
+            <button
               onClick={() => setIsVendor(false)}
               className={`flex-1 py-2.5 z-10 font-medium text-sm flex items-center justify-center gap-2 transition-colors ${!isVendor ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
               <ShoppingBag size={16} /> I'm Shopping
             </button>
-            <button 
+            <button
               onClick={() => setIsVendor(true)}
               className={`flex-1 py-2.5 z-10 font-medium text-sm flex items-center justify-center gap-2 transition-colors ${isVendor ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
@@ -79,15 +75,14 @@ export default function App() {
             </button>
           </div>
 
-          {/* Mode Tabs (Login / Sign Up) */}
           <div className="flex gap-8 mb-8 w-full max-w-sm border-b border-zinc-200">
-            <button 
+            <button
               onClick={() => setIsLogin(true)}
               className={`pb-3 font-semibold text-lg transition-all border-b-2 px-2 ${isLogin ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
             >
               Log In
             </button>
-            <button 
+            <button
               onClick={() => setIsLogin(false)}
               className={`pb-3 font-semibold text-lg transition-all border-b-2 px-2 ${!isLogin ? 'border-zinc-900 text-zinc-900' : 'border-transparent text-zinc-400 hover:text-zinc-600'}`}
             >
@@ -95,25 +90,22 @@ export default function App() {
             </button>
           </div>
 
-          {/* Sliding Form Container */}
           <div className="w-full max-w-sm overflow-hidden relative">
-            <div 
+            <div
               className={`flex w-[200%] transition-transform duration-500 ease-in-out ${isLogin ? 'translate-x-0' : '-translate-x-1/2'}`}
             >
-              
-              {/* --- LOGIN FORMS (Left Side of Slider) --- */}
               <div className="w-1/2 shrink-0 px-1">
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-4" onSubmit={handleAuthSubmit}>
                   <div className="space-y-4">
-                    <InputField 
-                      icon={<Mail size={20} />} 
-                      type="email" 
-                      placeholder={isVendor ? "Business Email" : "Email Address"} 
+                    <InputField
+                      icon={<Mail size={20} />}
+                      type="email"
+                      placeholder={isVendor ? "Business Email" : "Email Address"}
                     />
-                    <InputField 
-                      icon={<Lock size={20} />} 
-                      type="password" 
-                      placeholder="Password" 
+                    <InputField
+                      icon={<Lock size={20} />}
+                      type="password"
+                      placeholder="Password"
                     />
                   </div>
 
@@ -127,7 +119,6 @@ export default function App() {
 
                   <SubmitButton text={`Sign In to ${isVendor ? 'Dashboard' : 'Outfyt'}`} />
 
-                  {/* Social Auth (Shoppers Only) */}
                   {!isVendor && (
                     <div className="pt-6 pb-4 sm:pb-0">
                       <div className="relative">
@@ -143,11 +134,8 @@ export default function App() {
                 </form>
               </div>
 
-              {/* --- SIGN UP FORMS (Right Side of Slider) --- */}
               <div className="w-1/2 shrink-0 px-1">
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                  
-                  {/* Shopper Sign Up Fields */}
+                <form className="space-y-4" onSubmit={handleAuthSubmit}>
                   {!isVendor && (
                     <>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -163,18 +151,17 @@ export default function App() {
                     </>
                   )}
 
-                  {/* Vendor Sign Up Fields */}
                   {isVendor && (
                     <>
                       <InputField icon={<Store size={20} />} type="text" placeholder="Brand / Store Name" />
                       <InputField icon={<User size={20} />} type="text" placeholder="Contact Person" />
                       <InputField icon={<Mail size={20} />} type="email" placeholder="Business Email" />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                         <InputField icon={<Globe size={20} />} type="text" placeholder="Website" />
-                         <InputField icon={<InstagramIcon />} type="text" placeholder="@handle" />
+                        <InputField icon={<Globe size={20} />} type="text" placeholder="Website" />
+                        <InputField icon={<InstagramIcon />} type="text" placeholder="@handle" />
                       </div>
                       <InputField icon={<Lock size={20} />} type="password" placeholder="Create Password" />
-                      
+
                       <div className="bg-zinc-50 border border-zinc-200 p-4 rounded-xl mt-4">
                         <h4 className="text-sm font-semibold mb-1">Application Process</h4>
                         <p className="text-xs text-zinc-500">Our curation team reviews all vendor applications to ensure quality across the marketplace. You'll hear back within 24 hours.</p>
@@ -183,20 +170,15 @@ export default function App() {
                       <SubmitButton text="Submit Application" />
                     </>
                   )}
-
                 </form>
               </div>
-
             </div>
           </div>
-          
         </div>
       </div>
     </div>
   );
 }
-
-// --- REUSABLE COMPONENTS ---
 
 function InputField({ icon, type, placeholder }) {
   return (
@@ -209,8 +191,7 @@ function InputField({ icon, type, placeholder }) {
       <input
         type={type}
         placeholder={placeholder}
-        style={{ minHeight: '52px', padding: '14px 16px', paddingLeft: icon ? '48px' : '16px' }}
-        className="w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400"
+        className={`w-full bg-zinc-50 border border-zinc-200 text-zinc-900 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent transition-all placeholder:text-zinc-400 ${icon ? 'pl-12' : ''}`}
         required
       />
     </div>
@@ -219,10 +200,9 @@ function InputField({ icon, type, placeholder }) {
 
 function SubmitButton({ text }) {
   return (
-    <button 
-      type="submit" 
-      style={{ minHeight: '52px', padding: '14px 24px', marginTop: '16px', color: '#ffffff' }}
-      className="w-full bg-zinc-900 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:bg-zinc-800 transition-transform active:scale-[0.98]"
+    <button
+      type="submit"
+      className="w-full bg-zinc-900 text-white rounded-xl py-4 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-zinc-800 transition-transform active:scale-[0.98] mt-4"
     >
       {text}
       <ArrowRight size={18} />
@@ -232,10 +212,9 @@ function SubmitButton({ text }) {
 
 function SocialButton({ icon, text }) {
   return (
-    <button 
+    <button
       type="button"
-      style={{ minHeight: '48px', padding: '12px 16px' }}
-      className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 rounded-xl text-sm font-medium hover:bg-zinc-50 transition-colors"
+      className="w-full flex items-center justify-center gap-2 bg-white border border-zinc-200 rounded-xl py-3 text-sm font-medium hover:bg-zinc-50 transition-colors"
     >
       {icon}
       {text}

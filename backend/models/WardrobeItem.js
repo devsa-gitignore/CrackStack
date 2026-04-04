@@ -12,7 +12,7 @@ const wardrobeItemSchema = new mongoose.Schema({
   },
   clothType: {
     type: String,
-    enum: ['tshirt', 'shirt', 'jacket', 'kurta', 'dress'],
+    enum: ['tshirt', 'shirt', 'jacket', 'kurta', 'dress', 'jeans', 'pants', 'pajama', 'hoodie', 'skirt'],
     required: true
   },
   colors: {
@@ -27,6 +27,20 @@ const wardrobeItemSchema = new mongoose.Schema({
   productLinks: {
     type: [String],
     default: []
+  },
+  styleSuggestions: {
+    vibe:        { type: String,   default: '' },
+    pairWith:    { type: [String], default: [] },
+    footwear:    { type: String,   default: '' },
+    occasion:    { type: String,   default: '' },
+    styleTip:    { type: String,   default: '' },
+    searchQuery: { type: String,   default: '' },
+    trends:      { type: [String], default: [] }
+  },
+  source: {
+    type: String,
+    enum: ['user', 'seed'],
+    default: 'user'
   }
 }, {
   timestamps: true

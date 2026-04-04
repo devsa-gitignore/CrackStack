@@ -4,7 +4,8 @@ import {
   getAllWardrobeItems,
   getWardrobeByCategory,
   deleteWardrobeItem,
-  updateWardrobeCategory
+  updateWardrobeCategory,
+  completeOutfit
 } from '../controllers/wardrobeController.js';
 
 const router = express.Router();
@@ -26,6 +27,13 @@ router.get('/wardrobe', getAllWardrobeItems);
  * @desc    Retrieve wardrobe items by category filter
  */
 router.get('/wardrobe/category/:category', getWardrobeByCategory);
+
+/**
+ * @route   GET /api/wardrobe/complete/:id
+ * @desc    Return outfit completion suggestions using stored AI styleSuggestions
+ *          (must be before /:id to avoid Express treating 'complete' as a Mongo ID)
+ */
+router.get('/wardrobe/complete/:id', completeOutfit);
 
 /**
  * @route   DELETE /api/wardrobe/:id
