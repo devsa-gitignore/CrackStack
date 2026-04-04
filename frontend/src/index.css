@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+/* ── Fix Tailwind v4 Preflight aggressive form resets ── */
+input,
+button,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Ensure inputs don't collapse */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  min-height: 48px;
+  line-height: 1.5;
+}
+
+/* Ensure buttons don't collapse */
+button {
+  line-height: 1.5;
+}
+
+/* Checkbox sizing */
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #18181b;
+}
