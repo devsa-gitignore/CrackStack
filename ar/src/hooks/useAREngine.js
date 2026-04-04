@@ -29,6 +29,7 @@ export default function useAREngine({
   useWarp = true,
   showSkeleton = false,
   onUserContextUpdate,
+  onBaseCapture,
 }) {
   const canvasRef = useRef(null);
   const wardrobeCacheRef = useRef({}); // Stores loaded image canvases by garment ID
@@ -170,9 +171,28 @@ export default function useAREngine({
                 dimensions: {
                   shoulderWidth: Math.round(keypoints.shoulderWidth),
                   torsoHeight: Math.round(keypoints.torsoHeight),
+                  eyeDistance: Math.round(keypoints.eyeDistance),
                   ratio: (keypoints.torsoHeight / keypoints.shoulderWidth).toFixed(2)
                 }
               });
+
+              // 2. AUTO CAPTURE BASE SILHOUETTE! (Pure: Skeleton + Video, No Cloth)
+              if (onBaseCapture && !contextExtractedRef.current) {
+                // Temporarily draw skeleton if enabled
+                if (showSkeleton) drawDebugSkeleton(ctx, keypoints);
+                
+                // Capture the CLEAN frame now!
+                onBaseCapture(ctx.canvas.toDataURL('image/png'));
+                
+                // Clear the canvas and redraw the video to remove the skeleton before garments are drawn
+                // (Garments should be drawn over video, then skeleton drawn ON TOP for final view)
+                ctx.save();
+                ctx.translate(w, 0);
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, 0, 0, w, h);
+                ctx.restore();
+              }
+
               contextExtractedRef.current = true;
             }
           }
@@ -200,7 +220,7 @@ export default function useAREngine({
             }
           });
 
-          // Debug skeleton
+          // Draw final skeleton on top of everything for the LIVE view
           if (showSkeleton) {
             drawDebugSkeleton(ctx, keypoints);
           }
