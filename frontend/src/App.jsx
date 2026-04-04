@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx'
 import Wardrobe from './pages/Wardrobe.jsx'
 import Feed from './pages/Home.jsx'
 import UserProfile from './pages/UserProfile.jsx'
+import VendorPanel from './pages/VendorPanel.jsx'
 import TryOn from './pages/TryOn.jsx'
 import Dock from './components/Dock.jsx'
 
@@ -85,6 +86,7 @@ function App() {
         <Route path="/home" element={<Feed />} />
         <Route path="/user" element={<UserProfile />} />
         <Route path="/wardrobe" element={<Wardrobe />} />
+        <Route path="/vendor" element={<VendorPanel />} />
         <Route path="/try-on" element={<TryOn />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
