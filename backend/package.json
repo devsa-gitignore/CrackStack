@@ -2,6 +2,7 @@
   "name": "ar-tryon-backend",
   "version": "1.0.0",
   "description": "Node.js backend for AR Try-On ML & AI features",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js",

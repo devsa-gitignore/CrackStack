@@ -6,4 +6,5 @@ build/
 *.whl
 __pycache__/
 venv/
-agent.md
+package.json
+package-lock.json

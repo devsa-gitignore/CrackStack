@@ -1,6 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import morgan from 'morgan';
+import mongoose from 'mongoose';
+
+// Routes
+import findSimilarRoutes from './routes/findSimilar.js';
+import styleSuggestRoutes from './routes/styleSuggest.js';
+import trendAnalysisRoutes from './routes/trendAnalysis.js';
+import scrapeImageRoutes from './routes/scrapeImage.js';
+import removeBgRoutes from './routes/removeBg.js';
+import wardrobeRoutes from './routes/wardrobeRoutes.js';
 
 dotenv.config();
 
@@ -8,32 +18,30 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Allows massive Base64 Image Strings
+app.use(express.json({ limit: '50mb' }));
+app.use(morgan('dev'));
 
-// Simple Request Logger
-app.use((req, res, next) => {
-  const start = Date.now();
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} ${res.statusCode} - ${duration}ms`);
-  });
-  next();
-});
+// Routing
+app.use('/api', findSimilarRoutes);
+app.use('/api', styleSuggestRoutes);
+app.use('/api', trendAnalysisRoutes);
+app.use('/api', scrapeImageRoutes);
+app.use('/api', removeBgRoutes);
+app.use('/api', wardrobeRoutes);
 
-// AI Feature Routes
-app.use('/api', require('./routes/findSimilar'));
-app.use('/api', require('./routes/styleSuggest'));
-app.use('/api', require('./routes/trendAnalysis'));
-
-app.use('/api', require('./routes/scrapeImage'));
-app.use('/api', require('./routes/removeBg'));
-// app.use('/api', require('./routes/classify'));
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/crackstack';
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Node.js Backend running on http://localhost:${PORT}`);
-  console.log('Available AI Endpoints:');
+  console.log(`🚀 Node.js Backend running on http://localhost:${PORT}`);
+  console.log('Available AI & Wardrobe Endpoints:');
   console.log(' - POST /api/find-similar');
   console.log(' - POST /api/style-suggest');
   console.log(' - POST /api/trend-analysis');
+  console.log(' - POST /api/wardrobe (Smart Wardrobe Save)');
+  console.log(' - GET  /api/wardrobe (List All Items)');
 });

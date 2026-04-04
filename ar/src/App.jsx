@@ -27,8 +27,9 @@ export default function App() {
     }
   ]);
   
-  // Stores user body dimensions and complexion
+  // Stores user body dimensions, complexion, and reference image
   const [userContext, setUserContext] = useState(null);
+  const [baseSnapshot, setBaseSnapshot] = useState(null);
 
   const handleClothChange = (clothData) => {
     // We prepend the new cloth so it becomes the FIRST visible item found by the Sidebar
@@ -105,6 +106,7 @@ export default function App() {
               wardrobe={wardrobe}
               useWarp={useWarp}
               onUserContextUpdate={setUserContext}
+              onBaseCapture={setBaseSnapshot}
             />
           ) : (
             <PhotoFallback garment={wardrobe.find(g => g.isVisible) || wardrobe[0]} />
@@ -148,6 +150,8 @@ export default function App() {
         <ClothUploader
           onClose={() => setIsUploaderOpen(false)}
           onClothChange={handleClothChange}
+          baseSnapshot={baseSnapshot}
+          userContext={userContext}
         />
       )}
     </div>
