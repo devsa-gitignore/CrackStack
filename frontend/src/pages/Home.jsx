@@ -6,26 +6,10 @@ import MagicBento from '../components/MagicBento';
 import { bentoCards, categories, products } from '../data/products';
 
 const priceBands = [
-  {
-    id: 'All',
-    label: 'All prices',
-    predicate: () => true
-  },
-  {
-    id: 'budget',
-    label: 'Up to Rs 3,000',
-    predicate: (value) => value <= 3000
-  },
-  {
-    id: 'mid',
-    label: 'Rs 3,001 - Rs 8,000',
-    predicate: (value) => value > 3000 && value <= 8000
-  },
-  {
-    id: 'premium',
-    label: 'Above Rs 8,000',
-    predicate: (value) => value > 8000
-  }
+  { id: 'All', label: 'All prices', predicate: () => true },
+  { id: 'budget', label: 'Up to Rs 3,000', predicate: (value) => value <= 3000 },
+  { id: 'mid', label: 'Rs 3,001 - Rs 8,000', predicate: (value) => value > 3000 && value <= 8000 },
+  { id: 'premium', label: 'Above Rs 8,000', predicate: (value) => value > 8000 }
 ];
 
 export default function Home() {
