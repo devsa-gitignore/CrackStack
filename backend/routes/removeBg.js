@@ -42,7 +42,7 @@ router.post('/remove-bg', async (req, res) => {
 
   } catch (error) {
     console.error('RemoveBg Error:', error.response ? error.response.data.toString() : error.message);
-    res.status(500).json({ error: 'Failed to process background removal', details: error.message });
+    res.status(500).json({ error: 'Unable to process background removal', details: error.message });
   }
 });
 

@@ -87,7 +87,7 @@ Valid JSON example:
     
   } catch (error) {
     console.error('Style Suggest error:', error.message);
-    res.status(500).json({ error: 'Failed to generate style suggestions' });
+    res.status(500).json({ error: 'Unable to generate style suggestions' });
   }
 });
 

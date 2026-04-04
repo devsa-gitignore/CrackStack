@@ -41,7 +41,7 @@ router.post('/find-similar', async (req, res) => {
     res.json({ results: response.data.results });
   } catch (error) {
     console.error('Find Similar error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch similar products' });
+    res.status(500).json({ error: 'Unable to fetch similar products' });
   }
 });
 

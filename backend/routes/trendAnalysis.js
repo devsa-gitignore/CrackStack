@@ -68,7 +68,7 @@ Valid JSON example:
 
   } catch (error) {
     console.error('Trend Analysis error:', error.message);
-    res.status(500).json({ error: 'Failed to generate trend analysis' });
+    res.status(500).json({ error: 'Unable to generate trend analysis' });
   }
 });
 

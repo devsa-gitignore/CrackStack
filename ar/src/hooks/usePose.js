@@ -51,7 +51,7 @@ export default function usePose() {
         setLandmarkerReady(true);
         setLoadingProgress('Ready');
       } catch (err) {
-        console.error('Failed to initialize PoseLandmarker:', err);
+        console.error('Unable to initialize PoseLandmarker:', err);
         setLoadingProgress(`Error: ${err.message}`);
       }
     }
@@ -138,7 +138,7 @@ export default function usePose() {
         return result.landmarks[0];
       }
     } catch (err) {
-      console.error('Image detection failed:', err);
+      console.error('Image detection unable:', err);
       // Ensure we switch back to VIDEO mode
       try {
         landmarkerRef.current.setOptions({ runningMode: 'VIDEO' });

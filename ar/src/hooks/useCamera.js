@@ -108,7 +108,7 @@ export default function useCamera() {
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('Video source failed:', err);
+          console.error('Video source unable:', err);
           setCameraError(err.message);
         }
       }

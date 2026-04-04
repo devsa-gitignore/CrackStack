@@ -196,7 +196,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
         body: JSON.stringify({ imageBase64: erasedBase64 })
       });
 
-      if (!res.ok) throw new Error("Background removal failed.");
+      if (!res.ok) throw new Error("Background removal unable.");
       const data = await res.json();
       
       setCleansedImg(data.result);
@@ -260,7 +260,7 @@ export default function ClothUploader({ onClothChange, onClose, baseSnapshot, us
                         setImageSrc(URL.createObjectURL(blob));
                         setStep('erase');
                       } catch(err) {
-                        alert(err.message || 'Scraping failed');
+                        alert(err.message || 'Scraping unable');
                       } finally {
                         setScraping(false);
                       }

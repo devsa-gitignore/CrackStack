@@ -46,7 +46,7 @@ export default function useAREngine({
             const trimmedCanvas = await loadAndTrimImage(garment.image);
             wardrobeCacheRef.current[garment.id] = trimmedCanvas;
           } catch (err) {
-            console.error('Failed to load wardrobe item:', garment.image);
+            console.error('Unable to load wardrobe item:', garment.image);
           }
         };
         fetchImg();
