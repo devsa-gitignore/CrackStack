@@ -103,7 +103,7 @@ export const TEMPLATES = {
     category: 'over-head',
     widthMult: 1.8,
     heightMult: 1.2,
-    yOffset: -0.5,
+    yOffset: -0.2,
     isHead: true,
   },
   glasses: {

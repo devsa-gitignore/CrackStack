@@ -87,8 +87,14 @@ const bentoCards = [
     background: 'linear-gradient(180deg, #292524 0%, #44403c 100%)'
   }
 ];
+import { useNavigate } from 'react-router-dom';
+import { Search, SlidersHorizontal } from 'lucide-react';
+import Masonry from '../components/Masonry';
+import MagicBento from '../components/MagicBento';
+import { bentoCards, categories, products } from '../data/products';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -126,15 +132,15 @@ export default function Home() {
     return filteredProducts.map((product) => ({
       id: product.id,
       img: product.img,
-      url: '#',
       height: product.height,
       title: product.name,
       category: product.category,
       badge: product.badge,
       price: product.price,
-      description: product.description
+      description: product.description,
+      onClick: () => navigate(`/product/${product.id}`)
     }));
-  }, [filteredProducts]);
+  }, [filteredProducts, navigate]);
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-28 pt-24 text-zinc-900">
@@ -315,7 +321,7 @@ export default function Home() {
                 clickEffect
                 spotlightRadius={340}
                 particleCount={10}
-                glowColor="132, 0, 255"
+                glowColor="161, 161, 170"
                 disableAnimations={false}
               />
             </div>

@@ -242,7 +242,7 @@ const Masonry = ({
                   )}
                 </div>
                 {item.price && (
-                  <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                  <span className="whitespace-nowrap rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white backdrop-blur-sm">
                     {item.price}
                   </span>
                 )}

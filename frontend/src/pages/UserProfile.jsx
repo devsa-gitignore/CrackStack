@@ -1,4 +1,5 @@
-import { Mail, MapPin, Sparkles, Shirt } from 'lucide-react';
+import { Mail, MapPin, Sparkles, Shirt, Store } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const stylePicks = ['Streetwear', 'Traditional', 'Minimal', 'Occasion Wear'];
 
@@ -10,21 +11,29 @@ function UserProfile() {
           <div className="h-32 bg-gradient-to-r from-zinc-900 via-zinc-800 to-stone-600" />
           <div className="px-6 pb-8">
             <div className="-mt-14 flex h-28 w-28 items-center justify-center rounded-[28px] border-4 border-white bg-zinc-200 text-3xl font-black text-zinc-700">
-              U
+              DP
             </div>
             <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <h1 className="text-3xl font-black tracking-tight">User Profile</h1>
+                <h1 className="text-3xl font-black tracking-tight">Dev Parmar</h1>
                 <p className="mt-2 max-w-xl text-sm text-zinc-500">
                   Your signed-in space for personal details, style preferences, and wardrobe shortcuts.
                 </p>
               </div>
-              <button
-                type="button"
-                className="rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-              >
-                Edit Profile
-              </button>
+              <div className="flex gap-3">
+                <Link
+                  to="/vendor"
+                  className="flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-300"
+                >
+                  <Store size={16}/> Vendor Dashboard
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-full bg-zinc-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                >
+                  Edit Profile
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -37,7 +46,7 @@ function UserProfile() {
                 <Mail size={18} className="text-zinc-500" />
                 <div>
                   <p className="text-xs uppercase tracking-wide text-zinc-400">Email</p>
-                  <p className="text-sm font-semibold">user@outfyt.app</p>
+                  <p className="text-sm font-semibold">devparmar@gmail.com</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-4">
