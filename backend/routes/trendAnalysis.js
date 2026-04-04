@@ -1,5 +1,5 @@
-const express = require('express');
-const Groq = require('groq-sdk');
+import express from 'express';
+import Groq from 'groq-sdk';
 const router = express.Router();
 
 router.post('/trend-analysis', async (req, res) => {
@@ -72,4 +72,4 @@ Valid JSON example:
   }
 });
 
-module.exports = router;
+export default router;

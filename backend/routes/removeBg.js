@@ -1,6 +1,6 @@
-const express = require('express');
-const axios = require('axios');
-const FormData = require('form-data');
+import express from 'express';
+import axios from 'axios';
+import FormData from 'form-data';
 const router = express.Router();
 
 router.post('/remove-bg', async (req, res) => {
@@ -46,4 +46,4 @@ router.post('/remove-bg', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
