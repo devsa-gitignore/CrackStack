@@ -71,17 +71,6 @@ function AppHeader() {
         >
           outfyt<span className="text-zinc-400">.</span>
         </button>
-<<<<<<< HEAD
-        <button
-          type="button"
-          onClick={() => navigate('/try-on')}
-          className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-zinc-800"
-          title="Start AR Try-On"
-        >
-          <Camera size={16} />
-          Try On
-        </button>
-=======
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -101,7 +90,6 @@ function AppHeader() {
             Try On
           </button>
         </div>
->>>>>>> ba90ebf45708ce454273a4e1ba927c6018267d4f
       </div>
     </header>
   )

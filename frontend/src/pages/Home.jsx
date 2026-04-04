@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, SlidersHorizontal, Sparkles, Heart } from 'lucide-react';
 import Masonry from '../components/Masonry';
 import MagicBento from '../components/MagicBento';
@@ -87,11 +88,6 @@ const bentoCards = [
     background: 'linear-gradient(180deg, #292524 0%, #44403c 100%)'
   }
 ];
-import { useNavigate } from 'react-router-dom';
-import { Search, SlidersHorizontal } from 'lucide-react';
-import Masonry from '../components/Masonry';
-import MagicBento from '../components/MagicBento';
-import { bentoCards, categories, products } from '../data/products';
 
 export default function Home() {
   const navigate = useNavigate();
