@@ -4,12 +4,12 @@ import { Camera, Home, Shirt, User } from 'lucide-react'
 import LandingPage from './pages/LandingPage.jsx'
 import Login from './pages/Login.jsx'
 import Wardrobe from './pages/Wardrobe.jsx'
-import Feed from './pages/Home.jsx' // This is the premium clothing feed
+import Feed from './pages/Home.jsx'
 import UserProfile from './pages/UserProfile.jsx'
 import Dock from './components/Dock.jsx'
 
 function AppDock() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const items = [
     {
@@ -26,36 +26,55 @@ function AppDock() {
       icon: <Shirt size={20} className="text-white" />,
       label: 'Wardrobe',
       onClick: () => navigate('/wardrobe')
+    },
+    {
+      icon: <Camera size={20} className="text-white" />,
+      label: 'Try On',
+      onClick: () => navigate('/home')
     }
-  ];
+  ]
 
   return (
     <Dock
       items={items}
       panelHeight={60}
-      baseItemSize={48}
-      magnification={70}
+      baseItemSize={46}
+      magnification={66}
       distance={150}
     />
-  );
+  )
 }
 
-/* Floating AR Try-On button — top right on post-login screens */
-function ARButton() {
+function AppHeader() {
+  const navigate = useNavigate()
+
   return (
-    <button
-      className="fixed top-6 right-6 z-50 w-14 h-14 rounded-full bg-zinc-900 text-white shadow-2xl shadow-zinc-900/40 flex items-center justify-center hover:bg-zinc-800 hover:scale-105 active:scale-95 transition-all duration-300 border border-zinc-800"
-      title="Start AR Try-On"
-    >
-      <Camera size={24} />
-    </button>
-  );
+    <header className="fixed left-0 right-0 top-0 z-50 border-b border-zinc-100 bg-white/90 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="text-2xl font-extrabold tracking-tighter text-zinc-900"
+        >
+          outfyt<span className="text-zinc-400">.</span>
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-zinc-800"
+          title="Start AR Try-On"
+        >
+          <Camera size={16} />
+          Try On
+        </button>
+      </div>
+    </header>
+  )
 }
 
 function App() {
-  const location = useLocation();
-  const signedInRoutes = ['/home', '/wardrobe', '/user'];
-  const showAppUI = signedInRoutes.includes(location.pathname);
+  const location = useLocation()
+  const signedInRoutes = ['/home', '/wardrobe', '/user']
+  const showAppUI = signedInRoutes.includes(location.pathname)
 
   return (
     <>
@@ -67,11 +86,11 @@ function App() {
         <Route path="/wardrobe" element={<Wardrobe />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      
-      {showAppUI && <ARButton />}
+
+      {showAppUI && <AppHeader />}
       {showAppUI && <AppDock />}
     </>
-  );
+  )
 }
 
 export default App
