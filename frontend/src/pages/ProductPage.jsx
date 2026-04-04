@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Heart, ShieldCheck, ShoppingBag, Sparkles, Truck } from 'lucide-react';
+import { ArrowLeft, Heart, ShieldCheck, ShoppingBag, Sparkle as SparkleIcon, Truck } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
 function ProductPage() {
@@ -114,8 +114,16 @@ function ProductPage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
+                onClick={() => navigate('/ar/live', { state: { autoTryOn: { image: product.img, base64Image: product.img, type: product.category === 'T-Shirt' || product.category === 'Shirt' ? 'tshirt' : product.category.toLowerCase().replace('_', ' ') } } })}
+                className="inline-flex items-center justify-center gap-3 rounded-xl bg-white px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.22em] text-zinc-950 transition-all hover:bg-zinc-100 hover:shadow-2xl shadow-xl border border-zinc-200"
+              >
+                <SparkleIcon size={18} />
+                AR Try On
+              </button>
+              <button
+                type="button"
                 onClick={handleAddToCart}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-zinc-900 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
                 <ShoppingBag size={18} />
                 Add to Cart
@@ -123,13 +131,13 @@ function ProductPage() {
               <button
                 type="button"
                 onClick={handleBuyNow}
-                className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-6 py-3.5 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50"
+                className="inline-flex items-center justify-center rounded-xl border border-zinc-200 bg-white px-6 py-3.5 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50"
               >
                 Buy Now
               </button>
               <button
                 type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-3.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-5 py-3.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
               >
                 <Heart size={18} />
                 Wishlist
@@ -155,7 +163,7 @@ function ProductPage() {
 
             <div className="mt-8 rounded-[28px] bg-zinc-950 p-6 text-white">
               <div className="flex items-center gap-2 text-zinc-200">
-                <Sparkles size={18} />
+                <SparkleIcon size={18} />
                 <p className="text-sm font-semibold">What stands out</p>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">

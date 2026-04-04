@@ -16,9 +16,29 @@ function CheckoutPage() {
   const { cartItems, subtotal, shipping, total, clearCart } = useShop();
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const handlePlaceOrder = () => {
-    setOrderPlaced(true);
-    clearCart();
+  const handlePlaceOrder = async () => {
+    try {
+      // Notify vendors for each item in the cart
+      for (const item of cartItems) {
+        await fetch('http://localhost:5000/api/buyer/buy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: item.productId,
+            vendorId: item.product.vendorId || '65f1a2b3c4d5e6f7a8b9c0d1', // fallback to demo
+            buyerDetails: {
+              name: 'Dev Parmar',
+              email: 'devparmar@gmail.com',
+              address: '221B Fashion Street, Ahmedabad'
+            }
+          })
+        });
+      }
+      setOrderPlaced(true);
+      clearCart();
+    } catch (err) {
+      alert('Order processing failed. Please try again.');
+    }
   };
 
   return (

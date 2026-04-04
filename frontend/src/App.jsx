@@ -3,14 +3,16 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { Camera, Home, Shirt, ShoppingBag, User } from 'lucide-react'
 import LandingPage from './pages/LandingPage.jsx'
 import Login from './pages/Login.jsx'
-import Wardrobe from './pages/Wardrobe.jsx'
 import Feed from './pages/Home.jsx'
 import UserProfile from './pages/UserProfile.jsx'
 import ProductPage from './pages/ProductPage.jsx'
 import CartPage from './pages/CartPage.jsx'
 import CheckoutPage from './pages/CheckoutPage.jsx'
 import VendorPanel from './pages/VendorPanel.jsx'
-import TryOn from './pages/TryOn.jsx'
+import ARHub from './pages/ar/Index.jsx'
+import LiveMode from './pages/ar/LiveMode.jsx'
+import PhotoMode from './pages/ar/PhotoMode.jsx'
+import ARVault from './pages/ar/Vault.jsx'
 import Dock from './components/Dock.jsx'
 import { useShop } from './context/ShopContext.jsx'
 
@@ -31,13 +33,13 @@ function AppDock() {
     },
     {
       icon: <Shirt size={20} className="text-white" />,
-      label: 'Wardrobe',
-      onClick: () => navigate('/wardrobe')
+      label: 'Vault',
+      onClick: () => navigate('/ar/vault')
     },
     {
       icon: <Camera size={20} className="text-white" />,
-      label: 'Try On',
-      onClick: () => navigate('/try-on')
+      label: 'AR Mode',
+      onClick: () => navigate('/ar/live')
     },
     {
       icon: <ShoppingBag size={20} className="text-white" />,
@@ -82,12 +84,12 @@ function AppHeader() {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/try-on')}
+            onClick={() => navigate('/ar/live')}
             className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-zinc-800"
             title="Start AR Try-On"
           >
             <Camera size={16} />
-            Try On
+            Live AR
           </button>
         </div>
       </div>
@@ -97,8 +99,9 @@ function AppHeader() {
 
 function App() {
   const location = useLocation()
-  const signedInRoutes = ['/home', '/wardrobe', '/user', '/cart', '/checkout', '/vendor', '/try-on']
-  const showAppUI = signedInRoutes.includes(location.pathname) || location.pathname.startsWith('/product/')
+  const signedInRoutes = ['/home', '/user', '/cart', '/checkout', '/vendor']
+  const showAppUI = (signedInRoutes.includes(location.pathname) || location.pathname.startsWith('/product/')) && 
+                    !location.pathname.startsWith('/ar')
 
   return (
     <>
@@ -110,9 +113,17 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/user" element={<UserProfile />} />
-        <Route path="/wardrobe" element={<Wardrobe />} />
         <Route path="/vendor" element={<VendorPanel />} />
-        <Route path="/try-on" element={<TryOn />} />
+        
+        {/* Modern AR Suite */}
+        <Route path="/ar" element={<ARHub />} />
+        <Route path="/ar/live" element={<LiveMode />} />
+        <Route path="/ar/photo" element={<PhotoMode />} />
+        <Route path="/ar/vault" element={<ARVault />} />
+        
+        {/* Legacy Redirects */}
+        <Route path="/try-on" element={<Navigate to="/ar/live" replace />} />
+        <Route path="/wardrobe" element={<Navigate to="/ar/vault" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 

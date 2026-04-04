@@ -15,7 +15,8 @@ export const products = [
     fit: 'Relaxed fit',
     sizes: ['S', 'M', 'L', 'XL'],
     details: ['Breathable cotton jersey', 'Soft-touch finish', 'Easy layering essential'],
-    shipping: 'Delivery in 3-5 business days'
+    shipping: 'Delivery in 3-5 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '2',
@@ -33,7 +34,8 @@ export const products = [
     fit: 'Tailored fit',
     sizes: ['M', 'L', 'XL'],
     details: ['Sharp panel lines', 'Lightweight lining', 'Statement outer layer'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '3',
@@ -51,7 +53,8 @@ export const products = [
     fit: 'Straight fit',
     sizes: ['S', 'M', 'L', 'XL'],
     details: ['Festive-ready finish', 'Light sheen', 'Comfortable all-day drape'],
-    shipping: 'Delivery in 3-5 business days'
+    shipping: 'Delivery in 3-5 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '4',
@@ -69,7 +72,8 @@ export const products = [
     fit: 'Structured ceremonial fit',
     sizes: ['M', 'L', 'XL'],
     details: ['Wedding-ready look', 'Statement buttons', 'Long-line silhouette'],
-    shipping: 'Delivery in 5-7 business days'
+    shipping: 'Delivery in 5-7 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '5',
@@ -87,7 +91,8 @@ export const products = [
     fit: 'Free drape',
     sizes: ['Free Size'],
     details: ['Gloss finish', 'Elegant fall', 'Occasion-first styling'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '6',
@@ -105,7 +110,8 @@ export const products = [
     fit: 'Adjustable',
     sizes: ['One Size'],
     details: ['Minimal face', 'Adjustable strap', 'Everyday accessory'],
-    shipping: 'Delivery in 2-4 business days'
+    shipping: 'Delivery in 2-4 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '7',
@@ -141,7 +147,8 @@ export const products = [
     fit: 'Regular fit',
     sizes: ['S', 'M', 'L', 'XL'],
     details: ['Crisp handfeel', 'Smart casual versatility', 'Clean finishing'],
-    shipping: 'Delivery in 3-5 business days'
+    shipping: 'Delivery in 3-5 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '9',
@@ -159,7 +166,8 @@ export const products = [
     fit: 'Straight fit',
     sizes: ['S', 'M', 'L', 'XL'],
     details: ['Daytime festive wear', 'Soft sheen', 'Clean neckline finish'],
-    shipping: 'Delivery in 3-5 business days'
+    shipping: 'Delivery in 3-5 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '10',
@@ -195,7 +203,8 @@ export const products = [
     fit: 'Free drape',
     sizes: ['Free Size'],
     details: ['Evening shimmer', 'Fluid movement', 'Reception-ready look'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '12',
@@ -213,7 +222,8 @@ export const products = [
     fit: 'Cropped fit',
     sizes: ['S', 'M', 'L'],
     details: ['Streetwear silhouette', 'Sharp cropped cut', 'Layer-friendly shape'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '13',
@@ -267,7 +277,8 @@ export const products = [
     fit: 'Regular fit',
     sizes: ['S', 'M', 'L', 'XL'],
     details: ['Richer color depth', 'Smart casual use', 'Sharp collar finish'],
-    shipping: 'Delivery in 3-5 business days'
+    shipping: 'Delivery in 3-5 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '16',
@@ -285,7 +296,8 @@ export const products = [
     fit: 'Free drape',
     sizes: ['Free Size'],
     details: ['Signature event piece', 'Rich color tone', 'Elegant fall'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '17',
@@ -303,7 +315,8 @@ export const products = [
     fit: 'Boxy fit',
     sizes: ['M', 'L', 'XL'],
     details: ['Directional silhouette', 'Textured handfeel', 'Strong layering piece'],
-    shipping: 'Delivery in 4-6 business days'
+    shipping: 'Delivery in 4-6 business days',
+    vendorId: '65f1a2b3c4d5e6f7a8b9c0d1'
   },
   {
     id: '18',
