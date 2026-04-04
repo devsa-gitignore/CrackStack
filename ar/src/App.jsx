@@ -12,21 +12,53 @@ const MODES = {
 export default function App() {
   const [mode, setMode] = useState(MODES.CAMERA);
   const [useWarp, setUseWarp] = useState(true);
-  
+
   // Custom Cloth State management
   const [isUploaderOpen, setIsUploaderOpen] = useState(false);
   const [wardrobe, setWardrobe] = useState([
+    // {
+    //   id: 1,
+    //   image: '/mock-tshirt.png',
+    //   base64Image: null,
+    //   type: 'tshirt',
+    //   description: null,
+    //   targetPins: null,
+    //   isVisible: true,
+    // },
     {
-      id: 1,
-      image: '/mock-tshirt.png',
+      id: 101,
+      image: '/assets/turban.png',
       base64Image: null,
-      type: 'tshirt',
-      description: null,
-      targetPins: null,
-      isVisible: true,
+      type: 'turban',
+      description: 'Traditional Saffron Turban',
+      isVisible: false,
+    },
+    {
+      id: 102,
+      image: '/assets/watch.png',
+      base64Image: null,
+      type: 'watch',
+      description: 'Luxury Silver Watch',
+      isVisible: false,
+    },
+    {
+      id: 103,
+      image: '/assets/glasses.png',
+      base64Image: null,
+      type: 'glasses',
+      description: 'Classic Wayfarers',
+      isVisible: false,
+    },
+    {
+      id: 104,
+      image: '/assets/shoes.png',
+      base64Image: null,
+      type: 'shoes',
+      description: 'Modern White Sneakers',
+      isVisible: false,
     }
   ]);
-  
+
   // Stores user body dimensions, complexion, and reference image
   const [userContext, setUserContext] = useState(null);
   const [baseSnapshot, setBaseSnapshot] = useState(null);
@@ -47,7 +79,7 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen flex bg-gray-950 text-white overflow-hidden">
-      
+
       {/* Main Left Side - App Content */}
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <header className="flex items-center justify-between px-5 py-3 bg-gray-900/80 backdrop-blur-md border-b border-white/5 z-20 absolute top-0 w-full left-0">
@@ -69,11 +101,10 @@ export default function App() {
             {/* Warp Toggle */}
             <button
               onClick={() => setUseWarp((prev) => !prev)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                useWarp
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${useWarp
                   ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/30'
                   : 'bg-gray-800 text-gray-400 border border-gray-700'
-              }`}
+                }`}
             >
               {useWarp ? '◆ Warp ON' : '▬ Flat ON'}
             </button>
@@ -82,17 +113,15 @@ export default function App() {
             <div className="flex bg-gray-800 rounded-lg p-0.5 border border-gray-700">
               <button
                 onClick={() => setMode(MODES.CAMERA)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === MODES.CAMERA ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${mode === MODES.CAMERA ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
               >
                 📷 Camera
               </button>
               <button
                 onClick={() => setMode(MODES.PHOTO)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === MODES.PHOTO ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${mode === MODES.PHOTO ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
               >
                 🖼️ Photo
               </button>
@@ -111,7 +140,7 @@ export default function App() {
           ) : (
             <PhotoFallback garment={wardrobe.find(g => g.isVisible) || wardrobe[0]} />
           )}
-          
+
           {/* WARDROBE MULTI-LAYER CONTROLS */}
           <div className="absolute left-6 top-24 z-30 flex flex-col gap-2">
             {wardrobe.map((garment) => (
@@ -120,7 +149,7 @@ export default function App() {
                 <div className="flex-1 flex flex-col pr-2">
                   <span className="text-xs font-bold text-white uppercase tracking-wider">{garment.type.replace('_', ' ')}</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <button 
+                    <button
                       onClick={() => toggleGarment(garment.id)}
                       className={`text-xs px-2 py-0.5 rounded ${garment.isVisible ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-300'}`}
                     >
@@ -138,8 +167,8 @@ export default function App() {
       </div>
 
       {/* Right Side - AI Sidebar */}
-      <AISidebar 
-        garmentType={wardrobe.find(g => g.isVisible)?.type || 'tshirt'} 
+      <AISidebar
+        garmentType={wardrobe.find(g => g.isVisible)?.type || 'tshirt'}
         description={wardrobe.find(g => g.isVisible)?.description}
         userContext={userContext}
         clothBase64={wardrobe.find(g => g.isVisible)?.base64Image}

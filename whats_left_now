@@ -1,8 +1,0 @@
-🛠️ What's Left / Current Issues:
-Trend Analysis Error: I noticed a 500 error in your backend logs for the /api/trend-analysis route. The AI is complaining that it "doesn't see an image provided". This is likely because the current model (llama-4-scout) is not a native Vision model. I can switch this to a Vision-capable model (like llama-3.2-11b-vision-preview) to fix the AI Stylist's "eyes."
-Persistent Wardrobe: Currently, your uploaded garments are lost if you refresh the page. We could add a local database (like IndexedDB or MongoDB) to save your custom wardrobe.
-Video Export: Allowing you to record a short clip of yourself in the AR gear to share or save for later.
-Multi-Garment Layering: We have the engine, but we could fine-tune the "Z-index" logic for complex items like layering a jacket over a specific hoodie.
-Video AR cloth try on with 4 images
-Wardrobe and Sharing it 
-Saving the tried on cloth's snapshots in the wardrobe
