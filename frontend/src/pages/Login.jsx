@@ -13,7 +13,7 @@ export default function App() {
   const vendorImg = "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=1200";
 
   return (
-    <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-hidden">
+    <div className="min-h-screen flex w-full bg-white font-sans text-zinc-900 overflow-y-auto lg:overflow-hidden">
       
       {/* LEFT PANEL - DYNAMIC VISUAL CANVAS */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-zinc-900">
@@ -51,8 +51,8 @@ export default function App() {
       </div>
 
       {/* RIGHT PANEL - AUTHENTICATION ENGINE */}
-      <div className="w-full lg:w-1/2 flex flex-col relative h-screen overflow-y-auto">
-        <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 md:p-24 min-h-max">
+      <div className="w-full lg:w-1/2 flex flex-col relative min-h-screen lg:h-screen lg:overflow-y-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 md:p-24 min-h-max">
           
           {/* Logo */}
           <div className="mb-12 text-center w-full max-w-sm">
@@ -129,12 +129,12 @@ export default function App() {
 
                   {/* Social Auth (Shoppers Only) */}
                   {!isVendor && (
-                    <div className="pt-6">
+                    <div className="pt-6 pb-4 sm:pb-0">
                       <div className="relative">
                         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-zinc-200"></div></div>
                         <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-zinc-500">Or continue with</span></div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 mt-6">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
                         <SocialButton icon={<GoogleIcon />} text="Google" />
                         <SocialButton icon={<AppleIcon />} text="Apple" />
                       </div>
@@ -150,7 +150,7 @@ export default function App() {
                   {/* Shopper Sign Up Fields */}
                   {!isVendor && (
                     <>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField icon={<User size={20} />} type="text" placeholder="First Name" />
                         <InputField type="text" placeholder="Last Name" />
                       </div>
@@ -169,7 +169,7 @@ export default function App() {
                       <InputField icon={<Store size={20} />} type="text" placeholder="Brand / Store Name" />
                       <InputField icon={<User size={20} />} type="text" placeholder="Contact Person" />
                       <InputField icon={<Mail size={20} />} type="email" placeholder="Business Email" />
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                          <InputField icon={<Globe size={20} />} type="text" placeholder="Website" />
                          <InputField icon={<InstagramIcon />} type="text" placeholder="@handle" />
                       </div>
